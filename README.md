@@ -8,3 +8,5 @@ Simply go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the ro
 Your site will be available so long as your browser has an uninterrupted network connection. All resources are served via a encrypted P2P connection. Any static resources can be served.
 
 ##The static backend is NO MORE.
+
+Note: Chrome is the only supported browser.
