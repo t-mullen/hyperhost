@@ -201,13 +201,16 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
             var peer = new Peer(MY_ID, PEER_SERVER); //Create the peer
             window.location.hash = MY_ID; //Update URL to reflect where clients can connect
 
+            peer.on('error', function (err) {
+                console.error(err);
+            });
+
             peer.on('connection', function (conn) {
                 conn.on("open", function () {
                     conn.send(rawViews);
-                    conn.close();
                 });
             });
-        }
+        };
     });
 
     if (window.location.hash) {
