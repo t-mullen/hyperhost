@@ -159,3 +159,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
         });
     }
 });
+
+if (window.location.hash) {
+    window.location = "https://rationalcoding.github.io/HyperHost/client" + window.location.hash;
+}
