@@ -160,7 +160,6 @@ document.addEventListener("DOMContentLoaded", function (event) {
         peer.on('connection', function (conn) {
             conn.on("open", function () {
                 conn.send(rawViews);
-                conn.close();
             });
         });
     }
