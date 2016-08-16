@@ -10,3 +10,4 @@ Your site will be available so long as your browser has an uninterrupted network
 ##The static backend is NO MORE.
 
 Note: Chrome is the only supported browser.
+Temporarily limited to one page. Self-hosted fonts are not supported yet.
