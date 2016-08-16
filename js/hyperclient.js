@@ -6,7 +6,10 @@ Thomas Mullen 2016
 (function () {
     var rawViews;
 
+    var initialized = false;
     document.addEventListener("DOMContentLoaded", function (event) {
+        if (initialized) return;
+        initialized = true;
         //Request resources
         var MY_ID = parseInt(Math.random() * 1e15, 10).toString(16);
         var PEER_SERVER = {
@@ -24,9 +27,14 @@ Thomas Mullen 2016
 
         console.log(OTHER_ID);
         var conn = peer.connect(OTHER_ID);
+        console.log(conn);
         conn.on("data", function (data) {
-            rawViews = data;
+            console.log("Data received, rendering page...");
+            rawViews = data.rawViews;
             document.getElementById("HYPERHOST-viewframe").style.display = "inherit";
+            document.getElementById("HYPERHOST-dropzone").style.display = "none";
+            HYPERHOST_NAVIGATE("index.html");
+            conn.close();
         });
     });
 
@@ -50,8 +58,8 @@ Thomas Mullen 2016
     function HYPERHOST_NAVIGATE(path) {
         for (var i = 0; i < rawViews.length; i++) {
             if (rawViews[i].path === path) {
+                console.log(rawViews[i].body);
                 document.getElementById("HYPERHOST-viewframe").srcdoc = rawViews[i].body;
-                console.log("Navigated to " + path);
                 return;
             }
         }

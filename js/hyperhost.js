@@ -5,7 +5,11 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
 */
 
 (function () {
+    var initialized = false;
     document.addEventListener("DOMContentLoaded", function (event) {
+        if (initialized) return;
+        initialized = true;
+
         var rawViews = []; //Html, css, js... files that load children (always text files)
         var assets = []; //Images, fonts... files that cannot load children (can be url encoded)
         var fileCount = 0;
@@ -114,7 +118,6 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                     //Add listeners to internal links
                     var els = document.getElementsByClassName("HYPERHOST-internal-link");
                     for (var i=0; i<els.length; i++){
-                        console.log(i);
                         els[i].addEventListener('click', function(e){
                             e.preventDefault();
                             console.log("Requested HYPERHOST navigation to"+e.target.dataset.href);
@@ -166,6 +169,8 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
             event.preventDefault();
             event.stopPropagation();
 
+            document.getElementById("HYPERHOST-header").innerHTML = "Loading...";
+
             var items = event.dataTransfer.items;
             for (var i = 0; i < items.length; i++) {
                 var item = items[i].webkitGetAsEntry();
@@ -206,14 +211,19 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
             });
 
             peer.on('connection', function (conn) {
+                console.log("Connected to peer!");
                 conn.on("open", function () {
-                    conn.send(rawViews);
+                    console.log("Serving website to peer...");
+                    conn.send({
+                        rawViews: rawViews,
+                        virtualBackend: false
+                    });
                 });
             });
         };
     });
 
     if (window.location.hash) {
-        window.location = "/HyperHost/client.html" + window.location.hash;
+        window.location = "../client.html" + window.location.hash;
     }
 })();
