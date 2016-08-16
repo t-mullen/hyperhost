@@ -33,7 +33,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     reader.addEventListener("load", function () {
                         assets.push({
                             old: path + item.name,
-                            new: reader.result
+                            new: reader.result,
+                            extension: ext,
+                            fontName: item.name
                         });
                         fileCount--;
                         if (fileCount == 0 && traversalComplete) {
@@ -66,6 +68,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
             for (var i2 = 0; i2 < assets.length; i2++) {
                 rawViews[i].body = rawViews[i].body.replace(assets[i2].old, assets[i2].new);
             }
+        }
+        for (var i = 0; i < rawViews.length; i++) {
             //Determine rawView dependencies
             if (rawViews[i].extension == "html") { //Only html-out referencing is supported (should be suitable for most cases)
                 for (var i2 = 0; i2 < rawViews.length; i2++) {
@@ -84,8 +88,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     }
                     //Create hyper-host inter-page navigation scripts
                     if (rawViews[i2].extension == "html") {
-                        var re = new RegExp("href\\s*=\\s*['\"]" + escapeRegExp(rawViews[i].path) + "['\"]", "g");
-                        rawViews[i].body = rawViews[i].body.replace(re, "href='" + rawViews[i2].path + "' onclick='HYPERHOST_NAVIGATE(" + rawViews.path + ");return false;'");
+                        var re = new RegExp("href\\s*=\\s*['\"]" + escapeRegExp(rawViews[i2].path) + "['\"]", "g");
+                        rawViews[i].body = rawViews[i].body.replace(re, "href='' onclick='alert(\"Only single-page sites are currently supported by HyperHost\");return false;'");
                     }
                 }
             }
@@ -139,7 +143,6 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
     function HYPERHOST_SERVE() {
         //Serve incoming WebRTC connections
-        console.log("ok1");
         var MY_ID = parseInt(Math.random() * 1e15, 10).toString(16);
         var PEER_SERVER = {
             host: "peerjs-server-tmullen.mybluemix.net",
@@ -151,9 +154,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
         window.location.hash = MY_ID; //Update URL to reflect where clients can connect
 
         peer.on('connection', function (conn) {
-            console.log("ok2");
             conn.on("open", function () {
-                console.log("ok3");
                 conn.send(rawViews);
             });
         });
@@ -161,5 +162,5 @@ document.addEventListener("DOMContentLoaded", function (event) {
 });
 
 if (window.location.hash) {
-    window.location = "https://rationalcoding.github.io/HyperHost/client" + window.location.hash;
+    window.location = "/client.html" + window.location.hash;
 }
