@@ -9,15 +9,15 @@ Your site will be available so long as your browser has an uninterrupted network
 
 ##The static backend is NO MORE.
 
-Current Limitations:
-Both host and clients must be using a relatively new version of Chrome.
-Very large websites (More than 16mB can freeze up when clients attempt to load them. This will be fixed.)
-Fonts cannot be hosted yet as their encoding is different from other assets.
-URLs pointing to hosted files inside Javascript and CSS files will not work. (External URLs will work.)
+**Current Limitations:**  
+1. Both host and clients must be using a relatively new version of Chrome.
+2. Very large websites (More than 16mB can freeze up when clients attempt to load them. This will be fixed.)
+3. Fonts cannot be hosted yet as their encoding is different from other assets.
+4. URLs pointing to hosted files inside **Javascript and CSS** files will not work. (External URLs will work.)
 
-Upcoming Features:
-Virtual backend - Handle API calls and subsequent calls to the host.
+**Upcoming Features:**  
+1. Virtual backend - Handle API calls and subsequent calls to the host.
 
-Notes:
+**Notes:**  
 You can host the files in this repo anywhere (even on a file:// domain!) if you don't want to use Github's servers.
 
