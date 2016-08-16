@@ -3,7 +3,7 @@
     src: url(neo.ttf);
 }
 
-html {
+#HYPERHOST-html {
     position: relative;
     background: black;
 }
