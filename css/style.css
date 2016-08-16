@@ -1,0 +1,34 @@
+html {
+    position: relative;
+    background: black;
+}
+
+#HYPERHOST-dropzone {
+    font-family: Arial;
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    bottom: 30px;
+    right: 30px;
+    border: #d4ac00 2px dashed;
+    text-align: center;
+    color: transparent;
+    background: transparent;
+    max-width: none;
+}
+
+#HYPERHOST-dropzone h2 {
+    color: #d4ac00;
+    margin-top: 200px;
+    pointer-events: none;
+}
+
+#HYPERHOST-viewframe {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    border: #d4ac00 20px;
+}
