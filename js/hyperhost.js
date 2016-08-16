@@ -162,5 +162,5 @@ document.addEventListener("DOMContentLoaded", function (event) {
 });
 
 if (window.location.hash) {
-    window.location = "/client.html" + window.location.hash;
+    window.location = "/HyperHost/client.html" + window.location.hash;
 }
