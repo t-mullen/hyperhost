@@ -11,7 +11,7 @@ Your site will be available so long as your browser has an uninterrupted network
 
 **Current Limitations:**  
 - Both host and clients must be using a relatively new version of Chrome.  
-- Very large websites (More than 16mB can freeze up when clients attempt to load them. This will be fixed.)  
+- Very large websites (More than 50MB can freeze up when clients attempt to load them. This will be fixed.)  
 - Fonts cannot be hosted yet as their encoding is different from other assets.  
 - URLs pointing to hosted files inside **Javascript and CSS** files will not work. (External URLs will work.)  
 
