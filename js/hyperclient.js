@@ -26,8 +26,9 @@ Thomas Mullen 2016
         });
 
         console.log(OTHER_ID);
-        var conn = peer.connect(OTHER_ID);
-        console.log(conn);
+        var conn = peer.connect(OTHER_ID, {
+            reliable: true
+        });
         conn.on("data", function (data) {
             console.log("Data received, rendering page...");
             rawViews = data.rawViews;
