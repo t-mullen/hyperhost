@@ -224,6 +224,6 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
     });
 
     if (window.location.hash) {
-        window.location = "../client.html" + window.location.hash;
+        window.location = "/HyperHost/client.html" + window.location.hash;
     }
 })();
