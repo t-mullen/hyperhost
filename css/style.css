@@ -21,18 +21,20 @@
     background: transparent;
     max-width: none;
     min-height: 80%;
+    color: #d4ac00;
 }
 
 #HYPERHOST-dropzone > div {
-    margin-top: 200px;
+    margin-top: 160px;
     pointer-events: none;
     font-family: Neo;
 }
 
-#HYPERHOST-dropzone h1,
-#HYPERHOST-dropzone h2,
-#HYPERHOST-dropzone p {
+#HYPERHOST-dropzone a {
+    text-decoration: none;
     color: #d4ac00;
+    cursor: pointer;
+    pointer-events: all;
 }
 
 #HYPERHOST-dropzone h1 {
@@ -40,7 +42,7 @@
 }
 
 #HYPERHOST-dropzone p {
-    font-size: 10px;
+    font-size: 14px;
 }
 
 #HYPERHOST-viewframe {
