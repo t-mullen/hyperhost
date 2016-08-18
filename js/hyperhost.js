@@ -14,6 +14,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
         var assets = []; //Images, fonts... files that cannot load children (can be url encoded)
         var fileCount = 0;
         var traversalComplete = false;
+        var serverCode;
 
         function traverseFileTree(item, path, notRoot) {
             path = path || "";
@@ -28,11 +29,16 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                     ext = ext[ext.length - 1].toLowerCase();
                     if (["html", "css", "js"].indexOf(ext) != -1) {
                         reader.addEventListener("load", function () {
-                            rawViews.push({
-                                body: reader.result,
-                                path: path + item.name,
-                                extension: ext
-                            });
+                            if (item.name == "hyperserver.js") {
+                                serverCode = reader.result
+                            } else {
+                                rawViews.push({
+                                    body: reader.result,
+                                    path: path + item.name,
+                                    extension: ext
+
+                                });
+                            }
                             fileCount--;
                             if (fileCount == 0 && traversalComplete) {
                                 preprocessFiles();
@@ -128,6 +134,11 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                 `;
                 document.getElementsByClassName
                 rawViews[i].body = rawViews[i].body.replace("<head>", "<head><script>" + navScript + "</script>");
+            }
+
+            //Inject the virtual server code
+            if (serverCode) {
+                document.head.appendChild(document.createElement('script').setAttribute('srcdoc', serverCode));
             }
 
             // Start with index.html

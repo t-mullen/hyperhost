@@ -6,6 +6,7 @@
 #HYPERHOST-html {
     position: relative;
     background: black;
+    height: 100%;
 }
 
 #HYPERHOST-dropzone {
@@ -19,6 +20,7 @@
     color: transparent;
     background: transparent;
     max-width: none;
+    min-height: 80%;
 }
 
 #HYPERHOST-dropzone > div {
