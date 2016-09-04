@@ -103,15 +103,25 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
 
             }
             for (var i = 0; i < rawViews.length; i++) {
+                if (rawViews[i].invalid) continue;
                 document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Encoding subfiles " + i + 1 + "/" + rawViews.length + 1;
 
                 //Determine rawView dependencies
                 if (rawViews[i].extension === "html") { //Only html-out referencing is supported (should be suitable for most cases)
                     for (var i2 = 0; i2 < rawViews.length; i2++) {
+                        if (rawViews[i2].invalid) continue;
                         //Replace external javascript with embedded script
                         if (rawViews[i2].extension === "js") {
-                            var re = new RegExp("<script.*src\\s*=\\s*[\"'](.\/|)" + escapeRegExp(rawViews[i2].path) + "[\"'][^>]*>", "g");
-                            rawViews[i].body = rawViews[i].body.replace(re, "<script>" + rawViews[i2].body);
+                            if (rawViews[i2].body.search("</script>")) {
+                                alert("'" + rawViews[i2].path + "' contains the string '</script>' and therefore cannot be encoded by HyperHost.\n\nIt has been removed. Please host it externally.")
+                                var re = new RegExp("<script.*src\\s*=\\s*[\"'](.\/|)" + escapeRegExp(rawViews[i2].path) + "[\"'][^>]*>", "g");
+                                rawViews[i].body = rawViews[i].body.replace(re, "");
+                                rawViews[i2].invalid = true;
+                                rawViews[i2].body = "";
+                            } else {
+                                var re = new RegExp("<script.*src\\s*=\\s*[\"'](.\/|)" + escapeRegExp(rawViews[i2].path) + "[\"'][^>]*>", "g");
+                                rawViews[i].body = rawViews[i].body.replace(re, "<script>" + rawViews[i2].body);
+                            }
                         }
                         //Replace external stylesheets with embedded styles
                         if (rawViews[i2].extension === "css") {
@@ -152,7 +162,9 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                 });
                 */
                 var navScript = 'document.addEventListener("DOMContentLoaded",function(a){function b(a){var b=window.parent,c=new CustomEvent("hypermessage",{detail:a});b.dispatchEvent(c)}for(var c=document.getElementsByClassName("HYPERHOST-internal-link"),d=0;d<c.length;d++)c[d].addEventListener("click",function(a){a.preventDefault(),console.log("Requested HYPERHOST navigation to"+a.target.dataset.href),b({type:"navigate",path:a.target.dataset.href})})});';
-                rawViews[i].body = rawViews[i].body.replace("<head>", "<head><script>" + navScript + "</script>"); //Inject script into head
+                if (!rawViews[i].invalid) {
+                    rawViews[i].body = rawViews[i].body.replace("<head>", "<head><script>" + navScript + "</script>"); //Inject script into head
+                }
             }
 
             document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Starting server...";
