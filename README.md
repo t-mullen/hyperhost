@@ -14,6 +14,7 @@ Your site will be available so long as your browser has an uninterrupted network
 - Very large websites, **more than 80MB**, can freeze up when clients attempt to load them. (Serving needs to be staggered.)  
 - URLs pointing to hosted files inside **Javascript** files will not work. **External URLs will work.** (JS cannot easily be refactored, a partial fix might happen.)
 - Huge assets like long videos or high-res images will crash the host due to encoding being impossible. (These need to be moved to blobs!)
+- Scripts containing the string '</script>' cannot be encoded and will be removed. (Host these externally for now.)
 
 **Upcoming Features:**  
 - Virtual backend - Handle API calls and subsequent calls to the host, allow session management and small databases.
