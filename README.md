@@ -11,7 +11,7 @@ Your site will be available so long as your browser has an uninterrupted network
 
 **Current Limitations:**  
 - Both host and clients must be using a relatively new version of Chrome.  (The client will *partially* work on Firefox/Opera.)
-- Very large websites, **more than 80MB**, can freeze up when clients attempt to load them. (Preproccessing needs to be staggered.)  
+- Very large websites, **more than 80MB**, can freeze up when clients attempt to load them. (Serving needs to be staggered.)  
 - URLs pointing to hosted files inside **Javascript** files will not work. **External URLs will work.** (JS cannot easily be refactored, a partial fix might happen.)
 - Huge assets like long videos or high-res images will crash the host due to encoding being impossible. (These need to be moved to blobs!)
 
