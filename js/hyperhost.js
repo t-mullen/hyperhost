@@ -166,12 +166,15 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
             // Start with index.html
             document.getElementById("HYPERHOST-viewframe").style.display = "inherit"; //Show the viewframe
             document.getElementById("HYPERHOST-dropzone").style.display = "none"; //Hide the dropbox
+            window.setTimeout(function () {
+                document.getElementById("HYPERHOST-viewframe").contentWindow.focus(); //Focus the viewframe
+            }, 100);
             HYPERHOST_NAVIGATE("index.html"); //Navigate to the index
             HYPERHOST_SERVE(); //We can now serve the processed files to anyone who requests them
         }
 
         //Send message to viewFrame document (across iframe)
-        function senHyperMessage(data) {
+        function sendHyperMessage(data) {
             var childWindow = document.getElementById("HYPERHOST-viewframe").contentWindow;
             var event = new CustomEvent('hypermessage', {
                 detail: data
