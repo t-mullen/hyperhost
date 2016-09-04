@@ -22,5 +22,5 @@ Your site will be available so long as your browser has an uninterrupted network
 - Rehost option - Store processed site in localstorage for fast redeployment.
 
 **Notes:**  
-You can host the files in this repo anywhere (even on a file:// domain!) if you don't want to use Github's servers.
+You can host the files in this repo anywhere (even on a file:// domain!) if you don't want to use Github's servers for the initial resources.
 
