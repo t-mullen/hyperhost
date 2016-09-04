@@ -5,9 +5,13 @@ Thomas Mullen 2016
 
 (function () {
     var rawViews;
-
     var initialized = false;
-    document.addEventListener("DOMContentLoaded", function (event) {
+
+
+    document.addEventListener("DOMContentLoaded", initialize);
+    window.addEventListener('hypermessage', handleHyperMessage);
+
+    function initialize(event) {
         if (initialized) return;
         initialized = true;
         //Request resources
@@ -37,7 +41,7 @@ Thomas Mullen 2016
             HYPERHOST_NAVIGATE("index.html");
             conn.close();
         });
-    });
+    };
 
     //Send message to viewFrame document (across iframe)
     function message(data) {
@@ -49,13 +53,14 @@ Thomas Mullen 2016
     }
 
     //Listen to messages from viewFrame document (across iframe)
-    window.addEventListener('hypermessage', function (e) {
+    function handleHyperMessage(e) {
         console.log(e);
         if (e.detail.type == "navigate") {
             HYPERHOST_NAVIGATE(e.detail.path);
         }
-    }, false);
+    }
 
+    //Renders a different compiled HTML page in the viewframe
     function HYPERHOST_NAVIGATE(path) {
         for (var i = 0; i < rawViews.length; i++) {
             if (rawViews[i].path === path) {

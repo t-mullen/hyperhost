@@ -6,7 +6,9 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
 
 (function () {
     var initialized = false;
-    document.addEventListener("DOMContentLoaded", function (event) {
+    document.addEventListener("DOMContentLoaded", initializeHost, false);
+
+    function initializeHost() {
         if (initialized) return;
         initialized = true;
 
@@ -110,7 +112,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                     }
                 }
                 //Inject navigation script
-                var navScript = `
+                /*
                 document.addEventListener("DOMContentLoaded", function (event) {
                     //Send message to parent document (across iframe)
                     function message(data) {
@@ -131,9 +133,9 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                         });
                     }
                 });
-                `;
-                document.getElementsByClassName
-                rawViews[i].body = rawViews[i].body.replace("<head>", "<head><script>" + navScript + "</script>");
+                */
+                var navScript = 'document.addEventListener("DOMContentLoaded",function(a){function b(a){var b=window.parent,c=new CustomEvent("hypermessage",{detail:a});b.dispatchEvent(c)}for(var c=document.getElementsByClassName("HYPERHOST-internal-link"),d=0;d<c.length;d++)c[d].addEventListener("click",function(a){a.preventDefault(),console.log("Requested HYPERHOST navigation to"+a.target.dataset.href),b({type:"navigate",path:a.target.dataset.href})})});';
+                rawViews[i].body = rawViews[i].body.replace("<head>", "<head><script>" + navScript + "</script>"); //Inject script into head
             }
 
             //Inject the virtual server code
@@ -142,14 +144,14 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
             }
 
             // Start with index.html
-            document.getElementById("HYPERHOST-viewframe").style.display = "inherit";
-            document.getElementById("HYPERHOST-dropzone").style.display = "none";
-            HYPERHOST_NAVIGATE("index.html");
+            document.getElementById("HYPERHOST-viewframe").style.display = "inherit"; //Show the viewframe
+            document.getElementById("HYPERHOST-dropzone").style.display = "none"; //Hide the dropbox
+            HYPERHOST_NAVIGATE("index.html"); //Navigate to the index
             HYPERHOST_SERVE(); //We can now serve the processed files to anyone who requests them
         }
 
         //Send message to viewFrame document (across iframe)
-        function message(data) {
+        function senHyperMessage(data) {
             var childWindow = document.getElementById("HYPERHOST-viewframe").contentWindow;
             var event = new CustomEvent('hypermessage', {
                 detail: data
@@ -157,31 +159,37 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
             childWindow.dispatchEvent(event);
         }
 
-        //Listen to messages from viewFrame document (across iframe)
-        window.addEventListener('hypermessage', function (e) {
+        //Handle messages from viewFrame document (across iframe)                       
+        function handleHyperMessage(e) {
             console.log(e);
             if (e.detail.type == "navigate") {
                 HYPERHOST_NAVIGATE(e.detail.path);
             }
-        }, false);
+        }
+        window.addEventListener('hypermessage', handleHyperMessage, false);
 
+        //Renders a different compiled HTML page in the viewframe
         function HYPERHOST_NAVIGATE(path) {
-            for (var i = 0; i < rawViews.length; i++) {
-                if (rawViews[i].path === path) {
-                    document.getElementById("HYPERHOST-viewframe").srcdoc = rawViews[i].body;
-                    console.log("Navigated to " + path);
-                    return;
+            for (var i = 0; i < rawViews.length; i++) { //Search for the path
+                for (var i = 0; i < rawViews.length; i++) { //Search for the path
+                    if (rawViews[i].path === path) {
+                        document.getElementById("HYPERHOST-viewframe").srcdoc = rawViews[i].body;
+                        console.log("Navigated to " + path);
+                        return;
+                    }
                 }
+                alert("HyperHost path '" + path + "' does not exist!");
             }
-            alert("HyperHost path '" + path + "' does not exist!");
         }
 
-        document.getElementById("HYPERHOST-dropzone").addEventListener("drop", function (event) {
+        //Handles a folder drop event
+        function handleDropEvent(event) {
             event.preventDefault();
             event.stopPropagation();
 
             document.getElementById("HYPERHOST-header").innerHTML = "Loading...";
 
+            //TODO: Get folder parsing working for Firefox 42+
             var items = event.dataTransfer.items;
             for (var i = 0; i < items.length; i++) {
                 var item = items[i].webkitGetAsEntry();
@@ -191,13 +199,13 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
             }
             traversalComplete = true;
             event.target.style.borderColor = '#d4ac00';
-        }, false);
-
+        }
+        //Set drag n' drop event listeners
+        document.getElementById("HYPERHOST-dropzone").addEventListener("drop", handleDropEvent, false);
         document.getElementById("HYPERHOST-dropzone").addEventListener("dragover", function (event) {
             event.preventDefault();
             event.stopPropagation();
         });
-
         document.getElementById("HYPERHOST-dropzone").addEventListener("dragenter", function (event) {
             event.target.style.borderColor = '#00ea09';
         });
@@ -205,11 +213,12 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
             event.target.style.borderColor = '#d4ac00';
         });
 
+
+        //Serve incoming WebRTC connections
         function HYPERHOST_SERVE() {
-            //Serve incoming WebRTC connections
             var MY_ID = parseInt(Math.random() * 1e15, 10).toString(16);
             var PEER_SERVER = {
-                host: "peerjs-server-tmullen.mybluemix.net",
+                host: "peerjs-server-tmullen.mybluemix.net", //Swap out this if you want to use your own PeerJS server
                 port: 443,
                 path: "/server",
                 secure: true
@@ -232,9 +241,9 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                 });
             });
         };
-    });
+    }
 
     if (window.location.hash) {
-        window.location = "/HyperHost/client.html" + window.location.hash;
+        window.location = "/HyperHost/client.html" + window.location.hash; //Add our peerId to the url
     }
 })();
