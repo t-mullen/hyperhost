@@ -112,19 +112,6 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                 if (rawViews[i].extension === "html") { //Only html-out referencing is supported (should be suitable for most cases)
                     for (var i2 = 0; i2 < rawViews.length; i2++) {
                         if (rawViews[i2].invalid) continue;
-                        //Replace external javascript with embedded script
-                        if (rawViews[i2].extension === "js") {
-                            if (rawViews[i2].body.search("</script>") > 0) {
-                                alert("'" + rawViews[i2].path + "' contains the string '</script>' and therefore cannot be encoded by HyperHost.\n\nIt has been removed. Please host it externally.")
-                                var re = new RegExp("<script.*src\\s*=\\s*[\"'](.\/|)" + escapeRegExp(rawViews[i2].path) + "[\"'][^>]*>", "g");
-                                rawViews[i].body = rawViews[i].body.replace(re, "");
-                                rawViews[i2].invalid = true;
-                                rawViews[i2].body = "";
-                            } else {
-                                var re = new RegExp("<script.*src\\s*=\\s*[\"'](.\/|)" + escapeRegExp(rawViews[i2].path) + "[\"'][^>]*>", "g");
-                                rawViews[i].body = rawViews[i].body.replace(re, "<script>" + rawViews[i2].body);
-                            }
-                        }
                         //Replace external stylesheets with embedded styles
                         if (rawViews[i2].extension === "css") {
                             var re = new RegExp("<link.*rel\\s*=\\s*[\"']stylesheet[\"'].*href\\s*=\\s*[\"'](.\/|)" + escapeRegExp(rawViews[i2].path) + "[\"'].*>", "g");
