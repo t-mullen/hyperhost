@@ -11,6 +11,16 @@ Thomas Mullen 2016
     document.addEventListener("DOMContentLoaded", initialize);
     window.addEventListener('hypermessage', handleHyperMessage);
 
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
     function initialize(event) {
         if (initialized) return;
         initialized = true;
@@ -23,7 +33,7 @@ Thomas Mullen 2016
             secure: true
         };
         var peer = new Peer(MY_ID, PEER_SERVER); //Create the peer object
-        var OTHER_ID = window.location.hash.substr(1); //Get the server's id from url
+        var OTHER_ID = getParameterByName("site", document.location); //Get the server's id from url
 
         peer.on('error', function (err) {
             console.error(err);

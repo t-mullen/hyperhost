@@ -8,8 +8,8 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
     var initialized = false;
     document.addEventListener("DOMContentLoaded", initializeHost, false);
 
-    function initializeHost() {
-        if (initialized) return;
+    function initializeHost(forceReload) {
+        if (initialized && !forceReload) return;
         initialized = true;
 
         var rawViews = []; //Html, css, js... files that load children (always text files)
@@ -18,6 +18,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
         var realFileCount = 0; //Just used for loading stats
         var traversalComplete = false;
         var serverCode;
+        var MY_ID; //Our PeerJS id
 
         function traverseFileTree(item, path, depth) {
             if (item.isFile) {
@@ -211,6 +212,14 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                     }
                 }
                 alert("HyperHost path '" + path + "' does not exist!");
+                if (path === "index.html") {
+                    window.location.hash = "";
+                    document.getElementById("HYPERHOST-header").innerHTML = "HyperHost";
+                    document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Drop Website Root Folder Here to Instantly Host";
+                    document.getElementById("HYPERHOST-viewframe").style.display = "none";
+                    document.getElementById("HYPERHOST-dropzone").style.display = "inherit";
+                    initializeHost(true);
+                }
             }
         }
 
@@ -249,7 +258,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
 
         //Serve incoming WebRTC connections
         function HYPERHOST_SERVE() {
-            var MY_ID = parseInt(Math.random() * 1e15, 10).toString(16);
+            MY_ID = parseInt(Math.random() * 1e15, 10).toString(16);
             var PEER_SERVER = {
                 host: "peerjs-server-tmullen.mybluemix.net", //Swap out this if you want to use your own PeerJS server
                 port: 443,
@@ -257,7 +266,11 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                 secure: true
             };
             var peer = new Peer(MY_ID, PEER_SERVER); //Create the peer
-            window.location.hash = MY_ID; //Update URL to reflect where clients can connect
+            //Update URL to reflect where clients can connect (without reloading)
+            var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + "?site=" + MY_ID;
+            window.history.pushState({
+                path: newurl
+            }, '', newurl);
 
             peer.on('error', function (err) {
                 console.error(err);
@@ -276,7 +289,18 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
         };
     }
 
-    if (window.location.hash) {
-        window.location = "/HyperHost/client.html" + window.location.hash; //Add our peerId to the url
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    var siteParameter = getParameterByName("site", document.location);
+    if (siteParameter) {
+        document.location = "/HyperHost/client.html?site=" + siteParameter; //Add our peerId to the url
     }
 })();
