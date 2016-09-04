@@ -81,15 +81,32 @@ Thomas Mullen 2016
     }
 
     //Renders a different compiled HTML page in the viewframe
-    function HYPERHOST_NAVIGATE(path) {
-        for (var i = 0; i < rawViews.length; i++) {
-            if (rawViews[i].path === path) {
-                console.log(rawViews[i].body);
-                document.getElementById("HYPERHOST-viewframe").srcdoc = rawViews[i].body;
-                return;
+    function HYPERHOST_NAVIGATE(path, goingBack) {
+        for (var i = 0; i < rawViews.length; i++) { //Search for the path
+            for (var i = 0; i < rawViews.length; i++) { //Search for the path
+                if (rawViews[i].path === path) {
+                    document.getElementById("HYPERHOST-viewframe").srcdoc = rawViews[i].body;
+                    if (!goingBack) history.replaceState(path, path);
+                    console.log("Navigated to " + path);
+                    return;
+                }
+            }
+            alert("HyperHost path '" + path + "' does not exist!");
+            if (path === "index.html") {
+                window.location.hash = "";
+                document.getElementById("HYPERHOST-header").innerHTML = "HyperHost";
+                document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Drop Website Root Folder Here to Instantly Host";
+                document.getElementById("HYPERHOST-viewframe").style.display = "none";
+                document.getElementById("HYPERHOST-dropzone").style.display = "inherit";
+                initializeHost(true);
             }
         }
-        alert("HyperHost path '" + path + "' does not exist!");
     }
+
+    window.addEventListener('popstate', function (event) {
+        console.log(event.state);
+
+        HYPERHOST_NAVIGATE(event.state, true);
+    });
 
 })();

@@ -150,7 +150,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                     }
                 });
                 */
-                var navScript = 'document.addEventListener("DOMContentLoaded",function(a){function b(a){var b=window.parent,c=new CustomEvent("hypermessage",{detail:a});b.dispatchEvent(c)}for(var c=document.getElementsByClassName("HYPERHOST-internal-link"),d=0;d<c.length;d++)c[d].addEventListener("click",function(a){a.preventDefault(),console.log("Requested HYPERHOST navigation to"+a.target.dataset.href),b({type:"navigate",path:a.target.dataset.href})})});';
+                var navScript = 'document.addEventListener("DOMContentLoaded",function(a){function b(a){var b=window.parent,c=new CustomEvent("hypermessage",{detail:a});b.dispatchEvent(c)}for(var c=document.getElementsByClassName("HYPERHOST-internal-link"),d=0;d<c.length;d++)c[d].addEventListener("click",function(a){a.preventDefault(),console.log("Requested HYPERHOST navigation to "+a.target.dataset.href),b({type:"navigate",path:a.target.dataset.href})})});';
                 if (!rawViews[i].invalid) {
                     rawViews[i].body = rawViews[i].body.replace("<head>", "<head><script>" + navScript + "</script>"); //Inject script into head
                 }
@@ -169,6 +169,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
             window.setTimeout(function () {
                 document.getElementById("HYPERHOST-viewframe").contentWindow.focus(); //Focus the viewframe
             }, 100);
+            history.pushState("index.html", "index.html");
             HYPERHOST_NAVIGATE("index.html"); //Navigate to the index
             HYPERHOST_SERVE(); //We can now serve the processed files to anyone who requests them
         }
@@ -192,11 +193,12 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
         window.addEventListener('hypermessage', handleHyperMessage, false);
 
         //Renders a different compiled HTML page in the viewframe
-        function HYPERHOST_NAVIGATE(path) {
+        function HYPERHOST_NAVIGATE(path, goingBack) {
             for (var i = 0; i < rawViews.length; i++) { //Search for the path
                 for (var i = 0; i < rawViews.length; i++) { //Search for the path
                     if (rawViews[i].path === path) {
                         document.getElementById("HYPERHOST-viewframe").srcdoc = rawViews[i].body;
+                        if (!goingBack) history.replaceState(path, path);
                         console.log("Navigated to " + path);
                         return;
                     }
@@ -212,6 +214,12 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                 }
             }
         }
+
+        window.addEventListener('popstate', function (event) {
+            console.log(event.state);
+
+            HYPERHOST_NAVIGATE(event.state, true);
+        });
 
         //Handles a folder drop event
         function handleDropEvent(event) {
