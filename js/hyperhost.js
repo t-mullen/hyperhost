@@ -15,6 +15,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
         var rawViews = []; //Html, css, js... files that load children (always text files)
         var assets = []; //Images, fonts... files that cannot load children (can be url encoded)
         var fileCount = 0;
+        var realFileCount = 0; //Just used for loading stats
         var traversalComplete = false;
         var serverCode;
 
@@ -24,13 +25,13 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                 item.file(function (file) {
                     var reader = new FileReader();
                     fileCount++;
-
-
+                    realFileCount++;
+                    document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Found " + realFileCount + " files.";
                     var ext = item.name.split(".");
                     ext = ext[ext.length - 1].toLowerCase();
                     if (["html", "css", "js"].indexOf(ext) != -1) {
                         reader.addEventListener("load", function () {
-                            if (item.name == "hyperserver.js") {
+                            if (item.name === "hyperserver.js") {
                                 serverCode = reader.result
                             } else {
                                 rawViews.push({
@@ -41,14 +42,14 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                                 });
                             }
                             fileCount--;
-                            if (fileCount == 0 && traversalComplete) {
+                            if (fileCount === 0 && traversalComplete) {
                                 preprocessFiles();
                             }
                         }, false);
                         reader.readAsText(file); //Read these as text
                     } else {
                         reader.addEventListener("load", function () {
-                            var isFont = ["eot", "woff", "woff2", "ttf", "svg", "sfnt", "otf"].indexOf(ext) !== -1
+                            var isFont = ["eot", "woff", "woff2", "ttf", "svg", "sfnt", "otf"].indexOf(ext) !== -1;
                             assets.push({
                                 old: path + item.name,
                                 new: reader.result,
@@ -57,7 +58,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                                 isFont: isFont
                             });
                             fileCount--;
-                            if (fileCount == 0 && traversalComplete) {
+                            if (fileCount === 0 && traversalComplete) {
                                 preprocessFiles();
                             }
                         }, false);
@@ -83,31 +84,38 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
 
         function preprocessFiles() {
             for (var i = 0; i < rawViews.length; i++) {
+                document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Encoding assets " + i + 1 + "/" + rawViews.length + 1;
+
                 //Replace asset URLs with their data URL
                 for (var i2 = 0; i2 < assets.length; i2++) {
                     if (rawViews[i].isRoot) {
-                        rawViews[i].body = rawViews[i].body.replace(assets[i2].old, assets[i2].new);
+                        var re = new RegExp(escapeRegExp(assets[i2].old), "g")
+                        rawViews[i].body = rawViews[i].body.replace(re, assets[i2].new);
+                        console.log(rawViews[i].path, assets[i2].old);
                     } else {
                         //TODO: Deal with changing paths for non-root files.
-                        if (rawViews[i].extension = "css") { //Make urls work for css files
+                        if (rawViews[i].extension === "css") { //Make urls work for css files
                             var re = new RegExp("url\(([^)]*)" + escapeRegExp(assets[i2].itemName) + "([^)]*)\)", "g");
                             rawViews[i].body = rawViews[i].body.replace(re, "url(" + assets[i2].new);
                         }
 
                     }
                 }
+
             }
             for (var i = 0; i < rawViews.length; i++) {
+                document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Encoding subfiles " + i + 1 + "/" + rawViews.length + 1;
+
                 //Determine rawView dependencies
-                if (rawViews[i].extension == "html") { //Only html-out referencing is supported (should be suitable for most cases)
+                if (rawViews[i].extension === "html") { //Only html-out referencing is supported (should be suitable for most cases)
                     for (var i2 = 0; i2 < rawViews.length; i2++) {
                         //Replace external javascript with embedded script
-                        if (rawViews[i2].extension == "js") {
+                        if (rawViews[i2].extension === "js") {
                             var re = new RegExp("<script.*src\\s*=\\s*[\"']" + escapeRegExp(rawViews[i2].path) + "[\"'][^>]*>", "g");
                             rawViews[i].body = rawViews[i].body.replace(re, "<script>" + rawViews[i2].body);
                         }
                         //Replace external stylesheets with embedded styles
-                        if (rawViews[i2].extension == "css") {
+                        if (rawViews[i2].extension === "css") {
                             var re = new RegExp("<link.*rel\\s*=\\s*[\"']stylesheet[\"'].*href\\s*=\\s*[\"']" + escapeRegExp(rawViews[i2].path) + "[\"'].*>", "g");
                             rawViews[i].body = rawViews[i].body.replace(re, "<style>" + rawViews[i2].body + "</style>");
 
@@ -115,7 +123,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                             rawViews[i].body = rawViews[i].body.replace(re, "<style>" + rawViews[i2].body + "</style>");
                         }
                         //Create hyper-host inter-page navigation scripts
-                        if (rawViews[i2].extension == "html") {
+                        if (rawViews[i2].extension === "html") {
                             var re = new RegExp("href\\s*=\\s*['\"]" + escapeRegExp(rawViews[i2].path) + "(#[^'\"]*['\"]|['\"])", "g");
                             rawViews[i].body = rawViews[i].body.replace(re, "href='#' class='HYPERHOST-internal-link' data-href='" + rawViews[i2].path + "'");
                         }
@@ -148,6 +156,8 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                 rawViews[i].body = rawViews[i].body.replace("<head>", "<head><script>" + navScript + "</script>"); //Inject script into head
             }
 
+            document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Starting server...";
+
             //Inject the virtual server code
             if (serverCode) {
                 document.head.appendChild(document.createElement('script').setAttribute('srcdoc', serverCode));
@@ -172,7 +182,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
         //Handle messages from viewFrame document (across iframe)                       
         function handleHyperMessage(e) {
             console.log(e);
-            if (e.detail.type == "navigate") {
+            if (e.detail.type === "navigate") {
                 HYPERHOST_NAVIGATE(e.detail.path);
             }
         }
@@ -198,6 +208,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
             event.stopPropagation();
 
             document.getElementById("HYPERHOST-header").innerHTML = "Loading...";
+            document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Traversing folder structure...";
 
             //TODO: Get folder parsing working for Firefox 42+
             var items = event.dataTransfer.items;
