@@ -1,6 +1,6 @@
 @font-face {
     font-family: Neo;
-    src: url(neo.ttf);
+    src: url(neo.ttf) format('truetype');
 }
 
 #HYPERHOST-html {

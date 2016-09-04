@@ -68,6 +68,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                     console.error(err);
                 });
             } else if (item.isDirectory) {
+                if (item.name[0] === ".") return; //Ignore non-site files
                 // Get folder contents
                 var dirReader = item.createReader();
                 dirReader.readEntries(function (entries) {
@@ -112,7 +113,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                         if (rawViews[i2].invalid) continue;
                         //Replace external javascript with embedded script
                         if (rawViews[i2].extension === "js") {
-                            if (rawViews[i2].body.search("</script>")) {
+                            if (rawViews[i2].body.search("</script>") > 0) {
                                 alert("'" + rawViews[i2].path + "' contains the string '</script>' and therefore cannot be encoded by HyperHost.\n\nIt has been removed. Please host it externally.")
                                 var re = new RegExp("<script.*src\\s*=\\s*[\"'](.\/|)" + escapeRegExp(rawViews[i2].path) + "[\"'][^>]*>", "g");
                                 rawViews[i].body = rawViews[i].body.replace(re, "");
