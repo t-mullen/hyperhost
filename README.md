@@ -11,13 +11,14 @@ Your site will be available so long as your browser has an uninterrupted network
 
 **Current Limitations:**  
 - Both host and clients must be using a relatively new version of Chrome.  (The client will *partially* work on Firefox/Opera.)
-- Very large websites, **more than 50MB**, can freeze up when clients attempt to load them. (This will be fixed.)  
-- Fonts cannot be hosted yet as their encoding is different from other assets.  (This will be fixed.)
-- URLs pointing to hosted files inside **Javascript and CSS** files will not work. **External URLs will work.** (CSS will be supported soon, JS might get a partial fix.)
+- Very large websites, **more than 80MB**, can freeze up when clients attempt to load them. (Preproccessing needs to be staggered.)  
+- URLs pointing to hosted files inside **Javascript** files will not work. **External URLs will work.** (JS cannot easily be refactored, a partial fix might happen.)
 - Huge assets like long videos or high-res images will crash the host due to encoding being impossible. (These need to be moved to blobs!)
 
 **Upcoming Features:**  
 - Virtual backend - Handle API calls and subsequent calls to the host, allow session management and small databases.
+- Distributed hosting - Allow clients to opt-in to helping you host the site.
+- Rehost option - Store processed site in localstorage for fast redeployment.
 
 **Notes:**  
 You can host the files in this repo anywhere (even on a file:// domain!) if you don't want to use Github's servers.
