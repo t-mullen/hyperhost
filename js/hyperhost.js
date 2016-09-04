@@ -30,7 +30,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                     document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Found " + realFileCount + " files.";
                     var ext = item.name.split(".");
                     ext = ext[ext.length - 1].toLowerCase();
-                    if (["html", "css", "js"].indexOf(ext) != -1) {
+                    if (["html", "css"].indexOf(ext) != -1) {
                         reader.addEventListener("load", function () {
                             if (item.name === "hyperserver.js") {
                                 serverCode = reader.result
