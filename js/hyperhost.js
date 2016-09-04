@@ -18,8 +18,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
         var traversalComplete = false;
         var serverCode;
 
-        function traverseFileTree(item, path, notRoot) {
-            path = path || "";
+        function traverseFileTree(item, path, depth) {
             if (item.isFile) {
                 // Get file
                 item.file(function (file) {
@@ -37,8 +36,8 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                                 rawViews.push({
                                     body: reader.result,
                                     path: path + item.name,
-                                    extension: ext
-
+                                    extension: ext,
+                                    isRoot: depth <= 1
                                 });
                             }
                             fileCount--;
@@ -49,11 +48,13 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                         reader.readAsText(file); //Read these as text
                     } else {
                         reader.addEventListener("load", function () {
+                            var isFont = ["eot", "woff", "woff2", "ttf", "svg", "sfnt", "otf"].indexOf(ext) !== -1
                             assets.push({
                                 old: path + item.name,
                                 new: reader.result,
                                 extension: ext,
-                                fontName: item.name
+                                itemName: item.name,
+                                isFont: isFont
                             });
                             fileCount--;
                             if (fileCount == 0 && traversalComplete) {
@@ -70,7 +71,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                 var dirReader = item.createReader();
                 dirReader.readEntries(function (entries) {
                     for (var i = 0; i < entries.length; i++) {
-                        traverseFileTree(entries[i], notRoot ? path + item.name + "/" : "", true);
+                        traverseFileTree(entries[i], depth === 0 ? "" : path + item.name + "/", depth + 1);
                     }
                 });
             }
@@ -82,9 +83,18 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
 
         function preprocessFiles() {
             for (var i = 0; i < rawViews.length; i++) {
-                //Replace assets with their data URL
+                //Replace asset URLs with their data URL
                 for (var i2 = 0; i2 < assets.length; i2++) {
-                    rawViews[i].body = rawViews[i].body.replace(assets[i2].old, assets[i2].new);
+                    if (rawViews[i].isRoot) {
+                        rawViews[i].body = rawViews[i].body.replace(assets[i2].old, assets[i2].new);
+                    } else {
+                        //TODO: Deal with changing paths for non-root files.
+                        if (rawViews[i].extension = "css") { //Make urls work for css files
+                            var re = new RegExp("url\(([^)]*)" + escapeRegExp(assets[i2].itemName) + "([^)]*)\)", "g");
+                            rawViews[i].body = rawViews[i].body.replace(re, "url(" + assets[i2].new);
+                        }
+
+                    }
                 }
             }
             for (var i = 0; i < rawViews.length; i++) {
@@ -106,7 +116,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
                         }
                         //Create hyper-host inter-page navigation scripts
                         if (rawViews[i2].extension == "html") {
-                            var re = new RegExp("href\\s*=\\s*['\"]" + escapeRegExp(rawViews[i2].path) + "['\"]", "g");
+                            var re = new RegExp("href\\s*=\\s*['\"]" + escapeRegExp(rawViews[i2].path) + "(#[^'\"]*['\"]|['\"])", "g");
                             rawViews[i].body = rawViews[i].body.replace(re, "href='#' class='HYPERHOST-internal-link' data-href='" + rawViews[i2].path + "'");
                         }
                     }
@@ -194,7 +204,7 @@ To view the site elsewhere, only the generated PeerJS id (the URL hash) and hype
             for (var i = 0; i < items.length; i++) {
                 var item = items[i].webkitGetAsEntry();
                 if (item) {
-                    traverseFileTree(item);
+                    traverseFileTree(item, "", 0);
                 }
             }
             traversalComplete = true;

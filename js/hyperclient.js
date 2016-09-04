@@ -6,7 +6,7 @@ Thomas Mullen 2016
 (function () {
     var rawViews;
     var initialized = false;
-
+    var dataLoaded = false;
 
     document.addEventListener("DOMContentLoaded", initialize);
     window.addEventListener('hypermessage', handleHyperMessage);
@@ -27,6 +27,9 @@ Thomas Mullen 2016
 
         peer.on('error', function (err) {
             console.error(err);
+            if (!dataLoaded) {
+                document.getElementById("HYPERHOST-HEADER").innerHTML = "Connection failed";
+            }
         });
 
         console.log(OTHER_ID);
@@ -36,10 +39,17 @@ Thomas Mullen 2016
         conn.on("data", function (data) {
             console.log("Data received, rendering page...");
             rawViews = data.rawViews;
+            dataLoaded = true;
             document.getElementById("HYPERHOST-viewframe").style.display = "inherit";
             document.getElementById("HYPERHOST-dropzone").style.display = "none";
             HYPERHOST_NAVIGATE("index.html");
             conn.close();
+        });
+        conn.on("close", function () {
+            console.log("Connection to host closed.");
+            if (!dataLoaded) {
+                document.getElementById("HYPERHOST-HEADER").innerHTML = "Connection failed";
+            }
         });
     };
 
