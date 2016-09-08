@@ -11,7 +11,7 @@ Your site will be available so long as your browser has an uninterrupted network
 If you need more than a static website, HyperHost allows you to create a virtual server that uses your browser runtime to handle HTTP-like requests.
 
 It has syntax similar to Express.js (stay tuned for additions to the language).  
-Put your server code in a file named **HS-server.js**.
+Put your server code in a file named **HS-server.js**, then drag n' drop as you would a static site.
 ```
 var peerserver = require('peerserver');
 var app = peerserver.createApp();
