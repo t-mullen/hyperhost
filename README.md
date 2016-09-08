@@ -1,9 +1,9 @@
 # HyperHost
 ##Webservers, without servers.
 
-HyperHost allows hosting of static websites directly from the browser using P2P WebRTC and a custom rendering framework.
+HyperHost allows you to host websites directly from your browser using P2P WebRTC and a custom rendering framework.
 
-Simply go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the root folder of your website containing at least a **index.html**. Your website will be proccessed and a link to your hosted site will appear after a few seconds. Then, *anyone* can access your site at the same URL. That's it.
+Simply go to https://rationalcoding.github.io/HyperHost/ in Chrome and drag n' drop the root folder of your website containing at least a **index.html**. Your website will be proccessed and a link to your hosted site will appear after a few seconds. Then, anyone using Chrome, Firexfox or Opera can access your site at the same URL. That's it.
 
 Your site will be available so long as your browser has an uninterrupted network connection. All resources are served via a encrypted P2P connection. Any static resources can be served.
 
@@ -100,7 +100,7 @@ hyp.send({ //Send arbitrary data to server
 - UI for hosts. See active connections, logs, change files without redeploying.
 
 **Current Limitations:**  
-- The host must be running a relatively new version of Chrome. The client can run Chrome, Firefox or Opera. (Testing pending on Edge)
+- The host must be running Chrome. The client can run Chrome, Firefox or Opera. (Testing pending on Edge)
 - Very large websites, **more than 80MB**, can freeze up when clients attempt to load them. (Serving needs to be staggered.)  
 - URLs pointing to hosted files inside **Javascript** files will not work. **External URLs will work.** (JS cannot easily be refactored, a partial fix might happen.)
 - Truly massive files cannot be hosted due to encoding being impossible.
