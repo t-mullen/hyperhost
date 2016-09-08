@@ -148,6 +148,19 @@ var HyperHost = (function () {
                             rawViews[i].body = rawViews[i].body.replace(re, `href='#' onclick="event.preventDefault();var parent=window.parent;var event = new CustomEvent('hypermessage', {detail: {type: 'navigate',path:'` + rawViews[i2].path + `'}});parent.dispatchEvent(event)"`);
                         }
                     }
+                    //Make same-page hash links work!
+                    var re = new RegExp("href\\s*=\\s*['\"](.\/|)\\s*#[^'\"]+['\"]", "g");
+                    var res = rawViews[i].body.match(re);
+                    if (res !== null) {
+                        for (var i3 = 0; i3 < res.length; i3++) {
+                            var re2 = new RegExp("#[^'\"]+['\"]", "g")
+                            var anchorId = res[i3].match(re2)[0];
+                            anchorId = anchorId.substr(1, anchorId.length - 2);
+                            console.log(anchorId);
+                            var re3 = new RegExp("href\\s*=\\s*['\"](.\/|)\\s*#" + escapeRegExp(anchorId) + "['\"]", "g");
+                            rawViews[i].body = rawViews[i].body.replace(re3, `href="#" onclick="event.preventDefault(); document.getElementById('` + anchorId + `').scrollIntoView();"`);
+                        }
+                    }
                 }
             }
 
