@@ -36,7 +36,7 @@ app.post('/myroute', function (req, res) {
 app.listen();
 ```
 
-You can then interact with this server via any website hosted in HyperHost by defining the HyperRequest class. 
+You can interact with this server via any website hosted in HyperHost by defining the HyperRequest class in any client-side script. 
 ```
 //This script enables us to make requests to the virtual backend
 var HyperRequest = function () {
