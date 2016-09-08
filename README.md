@@ -35,17 +35,19 @@ app.post('/myroute', function (req, res) {
 app.listen();
 ```
 
-**Current Limitations:**  
-- The host must be running a relatively new version of Chrome. The client can run Chrome, Firefox or Opera. (Testing pending on Edge)
-- Very large websites, **more than 80MB**, can freeze up when clients attempt to load them. (Serving needs to be staggered.)  
-- URLs pointing to hosted files inside **Javascript** files will not work. **External URLs will work.** (JS cannot easily be refactored, a partial fix might happen.)
-- Truly massive files cannot be hosted due to encoding being impossible.
+##Great for demos and hackathons!
 
 **Upcoming Features:**  
 - Virtual backend - Handle API calls and subsequent calls to the host, allow session management and small databases.
 - Distributed hosting - Allow clients to opt-in to helping you host the site.
 - Rehost option - Store processed site in localstorage for fast redeployment.
 
+**Current Limitations:**  
+- The host must be running a relatively new version of Chrome. The client can run Chrome, Firefox or Opera. (Testing pending on Edge)
+- Very large websites, **more than 80MB**, can freeze up when clients attempt to load them. (Serving needs to be staggered.)  
+- URLs pointing to hosted files inside **Javascript** files will not work. **External URLs will work.** (JS cannot easily be refactored, a partial fix might happen.)
+- Truly massive files cannot be hosted due to encoding being impossible.
+
 **Notes:**  
-You can host the files in this repo anywhere (even on a file:// domain!) if you don't want to use Github's servers for the initial resources.
+You can host the files in this repo anywhere (even on a file:// domain!) if you don't want to use Github's servers for the initial resources. You can also use any PeerJS signalling server.
 
