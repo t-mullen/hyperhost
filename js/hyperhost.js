@@ -19,7 +19,7 @@ var HyperHost = (function () {
 
     var siteParameter = getParameterByName("site", document.location);
     if (siteParameter) {
-        window.location = "../client.html?site=" + siteParameter; //Add our peerId to the url
+        document.location = "/HyperHost/client.html?site=" + siteParameter; //Add our peerId to the url
     }
 
 
