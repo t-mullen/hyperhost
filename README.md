@@ -10,7 +10,8 @@ Your site will be available so long as your browser has an uninterrupted network
 ##Go Beyond Static Websites
 HyperHost creates a virtual server that uses your browser runtime to handle HTTP-like requests.
 
-It has syntax similar to Express.js (stay tuned for additions to the language)
+It has syntax similar to Express.js (stay tuned for additions to the language).  
+Put your server code in a file named **HS-server.js**.
 ```
 var peerserver = require('peerserver');
 var app = peerserver.createApp();
@@ -35,10 +36,65 @@ app.post('/myroute', function (req, res) {
 app.listen();
 ```
 
+You can then interact with this server via any website hosted in HyperHost by defining the HyperRequest class. 
+```
+//This script enables us to make requests to the virtual backend
+var HyperRequest = function () {
+    self = {};
+    self.onload = function () {}
+    self.open = function (method, route) {
+        self.method = method;
+        self.route = route;
+    }
+    self.send = function (body) {
+        var parent = window.parent;
+        var id = Math.random().toString().substr(0, 30);
+        var event = new CustomEvent("hypermessage", {
+            detail: {
+                type: "request",
+                request: {
+                    method: self.method,
+                    route: self.route,
+                    body: body
+                },
+                id: id
+            }
+        });
+        parent.dispatchEvent(event)
+
+        function handleResponse(e) {
+            if (e.detail.type === "response" && e.detail.id === id) {
+                window.removeEventListener(listener, handleResponse);
+                self.onload(e.detail.response);
+            }
+        }
+        var listener = window.addEventListener('hypermessage', handleResponse);
+    }
+    return self;
+}
+```
+
+
+```
+//Here is an example request
+var hyp = HyperRequest(); //Create a new HyperRequest
+hyp.onload = function (response) { //Set the callback
+    console.log(response);
+    document.getElementById("output").innerHTML = JSON.stringify(response);
+}
+hyp.open("GET", "/"); //Set the method and route
+hyp.send({ //Send arbitrary data to server
+    message: "hello",
+    moreData: [12, 42, 21, ],
+    evenMore: {}
+});
+```
+
+
 ##Great for demos and hackathons!
 
 **Upcoming Features:**  
-- Virtual backend - Handle API calls and subsequent calls to the host, allow session management and small databases.
+- More modules for virtual backends. (Databases, user management, utilities, custom modules, etc)
 - Distributed hosting - Allow clients to opt-in to helping you host the site.
 - Rehost option - Store processed site in localstorage for fast redeployment.
 
