@@ -1,5 +1,5 @@
 /*
-Version of hyperhost.js without the virtual engine. Simply makes requests to full hyperhosts.
+Client that renders the processed HTML served by the host.
 Thomas Mullen 2016
 */
 

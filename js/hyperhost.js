@@ -1,7 +1,6 @@
 /*
 hyperhost.js Thomas Mullen 2016
 Uses WebRTC to host static websites from the browser.
-To view the site elsewhere, only the generated PeerJS id (the URL hash) and hyperclient.js is needed.
 */
 
 var HyperHost = (function () {
@@ -146,36 +145,9 @@ var HyperHost = (function () {
                         //Create hyper-host inter-page navigation scripts
                         if (rawViews[i2].extension === "html") {
                             var re = new RegExp("href\\s*=\\s*['\"](.\/|)" + escapeRegExp(rawViews[i2].path) + "(#[^'\"]*['\"]|['\"])", "g");
-                            rawViews[i].body = rawViews[i].body.replace(re, "href='#' class='HYPERHOST-internal-link' data-href='" + rawViews[i2].path + "'");
+                            rawViews[i].body = rawViews[i].body.replace(re, `href='#' onclick="event.preventDefault();var parent=window.parent;var event = new CustomEvent('hypermessage', {detail: {type: 'navigate',path:'` + rawViews[i2].path + `'}});parent.dispatchEvent(event)"`);
                         }
                     }
-                }
-                //Inject navigation script
-                /*
-                document.addEventListener("DOMContentLoaded", function (event) {
-                    //Send message to parent document (across iframe)
-                    function message(data) {
-                        var parentWindow = window.parent;
-                        var event = new CustomEvent('hypermessage', {
-                            detail: data
-                        });
-                        parentWindow.dispatchEvent(event);
-                    }
-
-                    //Add listeners to internal links
-                    var els = document.getElementsByClassName("HYPERHOST-internal-link");
-                    for (var i=0; i<els.length; i++){
-                        els[i].addEventListener('click', function(e){
-                            e.preventDefault();
-                            console.log("Requested HYPERHOST navigation to"+e.target.dataset.href);
-                            message({type:"navigate",path:e.target.dataset.href});
-                        });
-                    }
-                });
-                */
-                var navScript = 'document.addEventListener("DOMContentLoaded",function(a){function b(a){var b=window.parent,c=new CustomEvent("hypermessage",{detail:a});b.dispatchEvent(c)}for(var c=document.getElementsByClassName("HYPERHOST-internal-link"),d=0;d<c.length;d++)c[d].addEventListener("click",function(a){a.preventDefault(),console.log("Requested HYPERHOST navigation to "+a.target.dataset.href),b({type:"navigate",path:a.target.dataset.href})})});';
-                if (!rawViews[i].invalid) {
-                    rawViews[i].body = rawViews[i].body.replace("<head>", "<head><script>" + navScript + "</script>"); //Inject script into head
                 }
             }
 
