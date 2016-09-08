@@ -21,6 +21,8 @@ Thomas Mullen 2016
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
 
+    var conn;
+
     function initialize(event) {
         if (initialized) return;
         initialized = true;
@@ -33,38 +35,77 @@ Thomas Mullen 2016
             secure: true
         };
         var peer = new Peer(MY_ID, PEER_SERVER); //Create the peer object
+
+        //Heartbeat
+        var heartbeater = makePeerHeartbeater(peer);
+
+        function makePeerHeartbeater(peer) {
+            var timeoutId = 0;
+
+            function heartbeat() {
+                timeoutId = setTimeout(heartbeat, 20000);
+                if (peer.socket._wsOpen()) {
+                    peer.socket.send({
+                        type: 'HEARTBEAT'
+                    });
+                }
+            }
+            heartbeat();
+            return {
+                start: function () {
+                    if (timeoutId === 0) {
+                        heartbeat();
+                    }
+                },
+                stop: function () {
+                    clearTimeout(timeoutId);
+                    timeoutId = 0;
+                }
+            };
+        }
+
+
         var OTHER_ID = getParameterByName("site", document.location); //Get the server's id from url
 
         peer.on('error', function (err) {
             console.error(err);
             if (!dataLoaded) {
-                document.getElementById("HYPERHOST-HEADER").innerHTML = "Connection failed";
+                document.getElementById("HYPERHOST-HEADER").innerHTML = "Host could not be reached.";
             }
         });
 
-        console.log(OTHER_ID);
-        var conn = peer.connect(OTHER_ID, {
+        conn = peer.connect(OTHER_ID, {
             reliable: true
         });
         conn.on("data", function (data) {
-            console.log("Data received, rendering page...");
-            rawViews = data.rawViews;
-            dataLoaded = true;
-            document.getElementById("HYPERHOST-viewframe").style.display = "inherit";
-            document.getElementById("HYPERHOST-dropzone").style.display = "none";
-            HYPERHOST_NAVIGATE("index.html");
-            conn.close();
+            if (data.type === "serve") {
+                console.log("Data received, rendering page...");
+                rawViews = data.content.rawViews;
+                dataLoaded = true;
+                document.getElementById("HYPERHOST-viewframe").style.display = "inherit";
+                document.getElementById("HYPERHOST-dropzone").style.display = "none";
+                HYPERHOST_NAVIGATE("index.html");
+                if (!data.content.hasVirtualBackend) {
+                    conn.close();
+                }
+            } else if (data.type === "response") {
+                sendHyperMessage({
+                    type: "response",
+                    response: data.content,
+                    id: data.id
+                });
+            }
         });
         conn.on("close", function () {
             console.log("Connection to host closed.");
             if (!dataLoaded) {
-                document.getElementById("HYPERHOST-HEADER").innerHTML = "Connection failed";
+                document.getElementById("HYPERHOST-HEADER").innerHTML = "Connection closed by host.";
             }
         });
     };
 
     //Send message to viewFrame document (across iframe)
-    function message(data) {
+    function sendHyperMessage(data, type) {
         var childWindow = document.getElementById("HYPERHOST-viewframe").contentWindow;
         var event = new CustomEvent('hypermessage', {
             detail: data
@@ -74,10 +115,23 @@ Thomas Mullen 2016
 
     //Listen to messages from viewFrame document (across iframe)
     function handleHyperMessage(e) {
-        console.log(e);
         if (e.detail.type == "navigate") {
             HYPERHOST_NAVIGATE(e.detail.path);
+        } else if (e.detail.type == "request") {
+            makeHyperRequest(e.detail.id, e.detail.request);
         }
+    }
+
+    //Make a request to the virtual backend
+    function makeHyperRequest(id, request) {
+        conn.send({
+            id: id,
+            type: "request",
+            request: {
+                method: "get",
+                route: "/"
+            }
+        });
     }
 
     //Renders a different compiled HTML page in the viewframe
@@ -104,8 +158,6 @@ Thomas Mullen 2016
     }
 
     window.addEventListener('popstate', function (event) {
-        console.log(event.state);
-
         HYPERHOST_NAVIGATE(event.state, true);
     });
 
