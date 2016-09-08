@@ -71,6 +71,7 @@ Thomas Mullen 2016
             console.error(err);
             if (!dataLoaded) {
                 document.getElementById("HYPERHOST-HEADER").innerHTML = "Host could not be reached.";
+                document.querySelector("#HYPERHOST-dropzone > div > a").style.display = "inherit";
             }
         });
 
@@ -100,6 +101,7 @@ Thomas Mullen 2016
             console.log("Connection to host closed.");
             if (!dataLoaded) {
                 document.getElementById("HYPERHOST-HEADER").innerHTML = "Connection closed by host.";
+                document.querySelector("#HYPERHOST-dropzone > div > a").style.display = "inherit";
             }
         });
     };
