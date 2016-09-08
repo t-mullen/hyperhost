@@ -48,6 +48,6 @@ hyp.onload = function (response) { //Set the callback
 hyp.open("GET", "/"); //Set the method and route
 hyp.send({ //Send arbitrary data to server
     message: "hello",
-    moreData: [12, 42, 21, ],
+    moreData: [12, 42, 21],
     evenMore: {}
 });

@@ -289,7 +289,7 @@ var HyperHost = (function () {
                     if (data.type === "request") {
                         var event = new CustomEvent('hyperdata', {
                             detail: {
-                                request: data.request,
+                                request: JSON.parse(data.request),
                                 connection: conn,
                                 id: data.id
                             }

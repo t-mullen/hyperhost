@@ -127,10 +127,7 @@ Thomas Mullen 2016
         conn.send({
             id: id,
             type: "request",
-            request: {
-                method: "get",
-                route: "/"
-            }
+            request: JSON.stringify(request)
         });
     }
 
