@@ -97,6 +97,7 @@ hyp.send({ //Send arbitrary data to server
 - More modules for virtual backends. (Databases, user management, utilities, custom modules, etc)
 - Distributed hosting - Allow clients to opt-in to helping you host the site.
 - Rehost option - Store processed site in localstorage for fast redeployment.
+- UI for hosts. See active connections, logs, change files without redeploying.
 
 **Current Limitations:**  
 - The host must be running a relatively new version of Chrome. The client can run Chrome, Firefox or Opera. (Testing pending on Edge)
