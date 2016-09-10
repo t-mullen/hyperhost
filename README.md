@@ -40,7 +40,7 @@ You can interact with this server via any website hosted in HyperHost by definin
 ```
 //This script enables us to make requests to the virtual backend
 var HyperRequest = function () {
-    self = {};
+    var self = {};
     self.onload = function () {}
     self.open = function (method, route) {
         self.method = method;
