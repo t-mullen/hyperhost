@@ -25,11 +25,7 @@ var HyperHost = (function () {
 
     var siteParameter = getParameterByName("site", document.location);
     if (siteParameter && document.location.toString().indexOf('client.html') === -1) {
-        if (document.location.toString().indexOf('index.html') === -1) { //Check being served from route or file
-            document.location = document.location + "/client.html?site=" + siteParameter; //Add our peerId to the url
-        } else {
-            document.location = document.location.toString().replace("index.html", "client.html");
-        }
+        document.location = "/HyperHost/client.html?site=" + siteParameter; //Add our peerId to the url
     }
     // Injects an array of urls to scripts
     function injectScripts(scripts, callback) {
