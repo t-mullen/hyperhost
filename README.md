@@ -9,7 +9,7 @@ Your site will be available so long as your browser has an uninterrupted network
 
 ##Go Beyond Static Websites
 If you need more than a static website, HyperHost allows you to create a virtual server that uses your browser runtime.  
-*Any* [Browserify](https://www.npmjs.com/package/browserify) module can be easily converted. See examples/development/HowToConvert.js
+*Any* [Browserify](https://www.npmjs.com/package/browserify) module can easily be converted. See converted_modules/READEME.md for more information.
 
 
 Put your server code in a file named **HH-server.js**, then drag n' drop as you would a static site.
