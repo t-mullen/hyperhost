@@ -8,32 +8,59 @@ Simply go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the ro
 Your site will be available so long as your browser has an uninterrupted network connection. All resources are served via a encrypted P2P connection. Any static resources can be served.
 
 ##Go Beyond Static Websites
-If you need more than a static website, HyperHost allows you to create a virtual server that uses your browser runtime to handle HTTP-like requests.
+If you need more than a static website, HyperHost allows you to create a virtual server that uses your browser runtime.  
+*Any* [Browserify](https://www.npmjs.com/package/browserify) module can be used.
 
-It has syntax similar to Express.js (stay tuned for additions to the language).  
-Put your server code in a file named **HS-server.js**, then drag n' drop as you would a static site.
+
+Put your server code in a file named **HH-server.js**, then drag n' drop as you would a static site.
 ```
-var peerserver = require('peerserver');
-var app = peerserver.createApp();
+var hyperhost = HyperHost.require('hyperhost'); //This module enables us to act as a server for clients. It is similar to Express.
+var custom = HyperHost.require('custom'); //Require custom modules
+var fs = HyperHost.require('fs'); //We can require any Browserified modules
 
-app.get('/', function(req, res) {
-  res.send({
-    anyData : "Any serializable data can be returned in the response.",
-    atAll: {a: [1,2,3], b: {}}
-  });
+var app = hyperhost.createApp(); //Creates our app
+
+
+//Requests to this server are done via HyperHost P2P clients and are NOT ordinary HTTP requests!
+
+//Handles 'get requests' to the '/' route
+app.get('/', function (req, res) {
+    //We can use our modules
+    
+    custom.someFunction();
+    fs.mkdir('/home');
+    fs.writeFile('/home/hello-world.txt', "Virtual file system? Yes please!");
+    
+    //We can send any data over the connection (including files, blobs, anything)
+    res.send({
+        exampleData: "hello!",
+        moreData: [1, 4, 2, 3],
+        more: {
+            anyData: {}
+        }
+    });
 });
 
+//Handles 'post requests' to the  '/myroute' route
 app.post('/myroute', function (req, res) {
+    //A more advanced way of doing the same thing
     res.body = {
         array: [1, 2, 3],
         object: {},
         int: 5
     }
     res.body.int = 6;
-    res.end(); 
+    res.end(); //Call res.end() when finished. res.send() calls this automatically.
 });
 
-app.listen();
+//Handles both 'post' and 'get' requests 
+app.all('/any/possible/route', function (req, res) {
+    res.statuscode = 404; //We can define status codes
+    res.kill(); //We can also kill the connection (this frees up resources but the client will no longer be able to make requests during their session)
+});
+
+
+app.listen(); //This starts the virtual backend
 ```
 
 You can interact with this server via any website hosted in HyperHost by defining the HyperRequest class in any client-side script. 
@@ -94,13 +121,14 @@ hyp.send({ //Send arbitrary data to server
 ##Great for demos and hackathons!
 
 **Upcoming Features:**  
-- More modules for virtual backends. (Databases, user management, utilities, custom modules, etc)
 - Distributed hosting - Allow clients to opt-in to helping you host the site.
 - Rehost option - Store processed site in localstorage for fast redeployment.
 - UI for hosts. See active connections, logs, change files without redeploying.
+- Zip uploading for cross-browser support.
+- No-WebRTC fallback for mobile and old browsers. 
 
 **Current Limitations:**  
-- The host must be running Chrome. The client can run Chrome, Firefox or Opera. (Testing pending on Edge)
+- The host must be running Chrome (no other browser supports folder drag n' drop). The client can be [any browser supporting WebRTC](http://caniuse.com/#feat=rtcpeerconnection).
 - Very large websites, **more than 80MB**, can freeze up when clients attempt to load them. (Serving needs to be staggered.)  
 - URLs pointing to hosted files inside **Javascript** files will not work. **External URLs will work.** (JS cannot easily be refactored, a partial fix might happen.)
 - Truly massive files cannot be hosted due to encoding being impossible.
