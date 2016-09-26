@@ -36,7 +36,7 @@ Thomas Mullen 2016
         };
         var peer = new Peer(MY_ID, PEER_SERVER); //Create the peer object
 
-        //Heartbeat
+        //Heartbeat to prevent disconnection from signalling server
         var heartbeater = makePeerHeartbeater(peer);
 
         function makePeerHeartbeater(peer) {

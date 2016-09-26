@@ -4,33 +4,73 @@ Uses WebRTC to host static websites from the browser.
 */
 
 var HyperHost = (function () {
+    'use strict';
     var module = {};
 
     /*------- Redirect clients to the client.html -----*/
     function getParameterByName(name, url) {
-        if (!url) url = window.location.href;
+        if (!url) {
+            url = window.location.href;
+        }
         name = name.replace(/[\[\]]/g, "\\$&");
         var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
             results = regex.exec(url);
-        if (!results) return null;
-        if (!results[2]) return '';
+        if (!results) {
+            return null;
+        } else if (!results[2]) {
+            return '';
+        }
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
 
     var siteParameter = getParameterByName("site", document.location);
-    if (siteParameter) {
-        document.location = "/HyperHost/client.html?site=" + siteParameter; //Add our peerId to the url
+    if (siteParameter && document.location.toString().indexOf('client.html') === -1) {
+        if (document.location.toString().indexOf('index.html') === -1) { //Check being served from route or file
+            document.location = document.location + "/client.html?site=" + siteParameter; //Add our peerId to the url
+        } else {
+            document.location = document.location.toString().replace("index.html", "client.html");
+        }
     }
+    // Injects an array of urls to scripts
+    function injectScripts(scripts, callback) {
+        function loadScript(i) {
+            var script = document.createElement("script");
+            script.type = "text/javascript";
 
+            if (script.readyState) { //IE
+                script.onreadystatechange = function () {
+                    if (script.readyState === "loaded" || script.readyState === "complete") {
+                        script.onreadystatechange = null;
+                        if (i === scripts.length - 1) {
+                            callback();
+                        }else{
+                            loadScript(i + 1);  
+                        }
+                    }
+                };
+            } else { //Others
+                script.onload = function () {
+                    if (i === scripts.length - 1) {
+                        callback();
+                    } else {
+                        loadScript(i + 1);
+                    }
+                };
+            }
 
+            script.src = module.modules[scripts[i]];
+            document.getElementsByTagName("head")[0].appendChild(script);
+        }
+        loadScript(0);
+    }
     /*---------------- Static/Base Backend ----------------*/
 
-    var initialized = false;
-    document.addEventListener("DOMContentLoaded", initializeHost, false);
-
     // Initialize the host
+    var initialized = false;
     function initializeHost(forceReload) {
-        if (initialized && !forceReload) return;
+        if (initialized && !forceReload) {
+            return;
+        }
         initialized = true;
 
         var rawViews = []; //Html, css, js... files that load children (always text files)
@@ -42,6 +82,7 @@ var HyperHost = (function () {
         var MY_ID; //Our PeerJS id
         var peer;
 
+        // Traverse a dropped director. TODO: ZIP support for browsers other than Chrome
         function traverseFileTree(item, path, depth) {
             if (item.isFile) {
                 // Get file
@@ -52,7 +93,7 @@ var HyperHost = (function () {
                     document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Found " + realFileCount + " files.";
                     var ext = item.name.split(".");
                     ext = ext[ext.length - 1].toLowerCase();
-                    if (["html", "css"].indexOf(ext) != -1) {
+                    if (["html", "css"].indexOf(ext) !== -1) { //These files need to be read as text, so we can replace URLs within them
                         reader.addEventListener("load", function () {
                             rawViews.push({
                                 body: reader.result,
@@ -68,16 +109,22 @@ var HyperHost = (function () {
                         reader.readAsText(file); //Read these as text
                     } else {
                         reader.addEventListener("load", function () {
-                            if (item.name === "HS-server.js") {
+                            if (item.name === "HH-server.js") {
+                                //Is virtual backend code
                                 serverCode = reader.result;
+                            } else if (item.name.substring(0, 3) === "HH-") {
+                                //Is a module for the virtual backend   
+                                var name = item.name.substring(3).slice(0, -3);
+                                moduleListing.push(name);
+                                module.modules[name] = reader.result; //Store url in place of the module (prevent .js extension with meaningless query)
                             } else {
                                 var isFont = ["eot", "woff", "woff2", "ttf", "svg", "sfnt", "otf"].indexOf(ext) !== -1;
                                 assets.push({
-                                    old: path + item.name,
-                                    new: reader.result,
-                                    extension: ext,
-                                    itemName: item.name,
-                                    isFont: isFont
+                                    "old" : path + item.name,
+                                    "new" : reader.result,
+                                    "extension" : ext,
+                                    "itemName" : item.name,
+                                    "isFont" : isFont
                                 });
                             }
                             fileCount--;
@@ -91,7 +138,9 @@ var HyperHost = (function () {
                     console.error(err);
                 });
             } else if (item.isDirectory) {
-                if (item.name[0] === ".") return; //Ignore non-site files
+                if (item.name[0] === ".") {
+                    return; //Ignore hidden files
+                }
                 // Get folder contents
                 var dirReader = item.createReader();
                 dirReader.readEntries(function (entries) {
@@ -156,7 +205,6 @@ var HyperHost = (function () {
                             var re2 = new RegExp("#[^'\"]+['\"]", "g")
                             var anchorId = res[i3].match(re2)[0];
                             anchorId = anchorId.substr(1, anchorId.length - 2);
-                            console.log(anchorId);
                             var re3 = new RegExp("href\\s*=\\s*['\"](.\/|)\\s*#" + escapeRegExp(anchorId) + "['\"]", "g");
                             rawViews[i].body = rawViews[i].body.replace(re3, `href="#" onclick="event.preventDefault(); document.getElementById('` + anchorId + `').scrollIntoView();"`);
                         }
@@ -217,9 +265,8 @@ var HyperHost = (function () {
                 secure: true
             };
             if (!peer) peer = new Peer(MY_ID, PEER_SERVER); //Create the peer
-            //Heartbeat
-            var heartbeater = makePeerHeartbeater(peer);
 
+            //Heartbeat to stop PeerJS from disconnecting us from the signalling server
             function makePeerHeartbeater(peer) {
                 var timeoutId = 0;
 
@@ -244,12 +291,13 @@ var HyperHost = (function () {
                     }
                 };
             }
+            var heartbeater = makePeerHeartbeater(peer);
 
             //Update URL to reflect where clients can connect (without reloading)
-            var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + "?site=" + MY_ID;
+            var clientURL = window.location.protocol + "//" + window.location.host + window.location.pathname + "?site=" + MY_ID;
             window.history.pushState({
-                path: newurl
-            }, '', newurl);
+                path: clientURL
+            }, '', clientURL);
             document.getElementById("another").style.display = "inherit";
 
             peer.on('error', function (err) {
@@ -264,7 +312,7 @@ var HyperHost = (function () {
                         type: "serve",
                         content: {
                             rawViews: rawViews,
-                            hasVirtualBackend: !!serverCode //Converts serverCode to boolean. Code is NOT being sent
+                            hasVirtualBackend: !!serverCode //Converts serverCode to boolean. Server code is NOT being sent
                         }
                     });
                 });
@@ -290,21 +338,33 @@ var HyperHost = (function () {
                     if (!peer.disconnected) {
                         console.log("Reconnected to server.");
                         window.clearInterval(check);
+                    } else {
+                        //TODO: Handle reconneciton failure
                     }
                 }, 1000);
             });
 
-            //Inject the virtual server code
             if (serverCode) {
                 console.log("Virtual backend detected! Initializing...")
-                var script = document.createElement('script');
-                script.setAttribute('src', serverCode)
-                document.head.appendChild(script);
+
+                //Inject the virtual backend modules
+                injectScripts(moduleListing, function () {
+                    moduleListing.push('hyperhost'); // Add the Hyperhost module (this module is unique in this respect)
+                    module.modules['hyperhost'] = hyperhostRequireModule;
+
+                    //Inject the virtual backend code after modules loaded
+
+                    var script = document.createElement('script');
+                    script.setAttribute('type', 'text/javascript');
+                    script.setAttribute('src', serverCode);
+                    document.head.appendChild(script);
+                });
+            } else {
+                console.log("No HH-server.js. Assuming there is no backend.");
             }
 
-            var clientURL = window.location.protocol + "//" + window.location.host + window.location.pathname + "?site=" + MY_ID;
             window.onbeforeunload = function () {
-                return "Your site will no longer be hosted if you leave!";
+                return "Your site will no longer be hosted if you leave!"; //Alert before leaving!
             }
             document.querySelector("#HYPERHOST-dropzone > div > h1").innerHTML = "<a target='_blank' href='" + clientURL + "'>Hosted on<br>" + clientURL + "</a>";
             document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Do not close this window!";
@@ -312,30 +372,33 @@ var HyperHost = (function () {
             document.querySelector("#HYPERHOST-dropzone").style.border = "none";
         };
     }
+    
+    document.addEventListener("DOMContentLoaded", initializeHost, false);
 
 
     /*---------------- Dynamic/Virtual Backend ----------------*/
 
-    var modules = {};
-    var moduleList = [];
+    module.modules = {}; //Maps name to actual module
+    var moduleListing = []; //Names and urls of modules for virtual backend
 
     //The 'require' emulator
     module.require = function (moduleName) {
-        if (moduleList.indexOf(moduleName) === -1) {
-            console.error("Module '" + moduleName + "' does not exist!");
+        if (moduleListing.indexOf(moduleName) === -1) {
+            console.error("Module '" + moduleName + "' does not exist! Did you upload it?");
             return;
         } else {
-            return modules[moduleName];
+            return module.modules[moduleName];
         }
     }
 
 
-    //'Peerserver' module
-    moduleList.push('peerserver');
-    modules['peerserver'] = (function () {
-        var peerserver = {};
+    //'hyperhost' module has to be within this scope, so it's pre-defined
+    var hyperhostRequireModule = (function () {
+        var module = {
+            exports: {}
+        };
 
-        //Constructs a new response object which abstracts away PeerJS
+        //Constructor for the response object, which abstracts away PeerJS
         var Response = function (conn, id) {
             this.body;
             this.send = function (data) {
@@ -352,14 +415,14 @@ var HyperHost = (function () {
                     }
                 });
             }
-            this.statuscode = 200; //Status code defaults to 200
+            this.statuscode = 200;
             this.kill = function () {
                 conn.close();
             }
         }
 
         //Creates the server app
-        peerserver.createApp = function () {
+        module.exports.createApp = function () {
             var app = {};
 
             var listening = false;
@@ -396,9 +459,8 @@ var HyperHost = (function () {
             return app;
         }
 
-        return peerserver;
+        return module.exports;
     }());
 
     return module;
 })();
-var require = HyperHost.require; //Expose require to any server code

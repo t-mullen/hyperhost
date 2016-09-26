@@ -2,19 +2,30 @@
 Example virtual server code. Feel free to use this as a template for your own applications.
 This file MUST be named HS-server.js for it to be loaded.
 
-See the exampleClient.js for how to make requests to this server.
+See HS-fs.js for an example of how to create your own modules from Browserify modules.
+
+See exampleClient.js for how to make requests to this server.
 */
 
 
-// We can use 'require' as we would with Node.
-var peerserver = require('peerserver'); //This module handles incoming reuqests from other peers
-var app = peerserver.createApp(); //Creates our app
+// We can use 'Hyperhost.require' as we would with Node's 'require'.
+var hyperhost = HyperHost.require('hyperhost'); //This module enables to interact with HyperHost. It is similar to Express
+var custom = HyperHost.require('custom'); //Require custom modules
+var fs = HyperHost.require('fs'); //We can require any Browserified modules
+
+var app = hyperhost.createApp(); //Creates our app
 
 
 //Requests to this server are done via HyperHost P2P clients and are NOT ordinary HTTP requests!
 
 //Handles 'get requests' to the '/' route
 app.get('/', function (req, res) {
+    //We can use our modules
+    
+    custom.someFunction();
+    fs.mkdir('/home');
+    fs.writeFile('/home/hello-world.txt', "Virtual file system? Yes please!");
+    
     //We can send any data over the connection (including files, blobs, anything)
     res.send({
         exampleData: "hello!",
@@ -44,12 +55,4 @@ app.all('/any/possible/route', function (req, res) {
 });
 
 
-app.listen(); //This starts the virtual server
-
-
-
-/*
-"Wait, this looks like Node! Can I...?" 
---> Probably not. The virtual server uses your browser runtime, it is not an actual server. 
-I will try to emulate as many useful functions as possible, but this will always be a subset of Node.
-*/
+app.listen(); //This starts the virtual backend

@@ -1,0 +1,29 @@
+<html lang="en">
+    <head>
+        <script>
+            var HyperHost = {};
+            HyperHost.modules = {};
+        </script>
+        <script src="HH-fs.js"></script>
+        <script>
+            var fs = HyperHost.modules['fs']
+            fs.mkdir('/home');
+            
+            fs.writeFile('/home/test.txt', 'hi', function(){
+                fs.readFile('/home/test.txt', 'utf-8', function(err, data){
+                    console.log(data);
+                })
+            })
+            
+            
+            console.log('ok');
+        
+        </script>
+    </head>
+    <body>
+    
+    
+    
+    
+    </body>
+</html>
