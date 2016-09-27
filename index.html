@@ -10,6 +10,29 @@
 
     <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <meta name="viewport" content="width=device-width" />
+    
+    <script>   
+     /*------- Redirect clients to the client.html -----*/
+    function getParameterByName(name, url) {
+        if (!url) {
+            url = window.location.href;
+        }
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) {
+            return null;
+        } else if (!results[2]) {
+            return '';
+        }
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    var siteParameter = getParameterByName("site", document.location);
+    if (siteParameter && document.location.toString().indexOf('client.html') === -1) {
+        document.location = "/HyperHost/client.html?site=" + siteParameter; //Add our peerId to the url
+    }
+    </script>
 
 
     <!-- Bootstrap core CSS     -->
