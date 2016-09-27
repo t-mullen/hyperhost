@@ -158,6 +158,7 @@ app.controller('ctrl', function ($scope) {
     console.olderror = console.error;
     
     console.log = function (msg) {
+        console.oldlog(msg);
         serverConsole(msg, 'text-info');
     }
     console.success = function(msg){

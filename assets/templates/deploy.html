@@ -8,20 +8,24 @@
                 <p class="category">To learn more, see the docs.</p>
             </div>
             <div class="content">
-                <div ng-if="!isChrome && !deploying" ngf-drop="addFiles($files)" ngf-drag-over-class="dragover" ngf-multiple="true" class="hyper-dropzone">
+                <!--ngf-drop="addFiles($files)" ngf-drag-over-class="dragover" ngf-multiple="true"-->
+                <div ng-if="!isChrome && !deploying"  class="hyper-dropzone">
                     <div>
-                        <p>Drag files here.</p>
-                        <p class="text-warning">Uploading folders is only available in Chrome.</p>
+                        <!--<p>Drag files here.</p>-->
+                        <p class="text-danger">Only Chrome is supported right now.</p>
+                        <!--
                         <p>or</p>
                         <div class="file-upload">
                             <label for="upload" class="file-upload__label">Upload Files</label>
                             <input hyperhost-upload id="upload" class="file-upload__input" type="file" name="file-upload">
                         </div>
+-->
                     </div>
                 </div>
                 <div hyperhost-drop ng-if="isChrome && !deploying" class="hyper-dropzone">
                     <div>
                         <p>Drag and drop folders and files here.</p>
+                        <!--
                         <p>or</p>
                         <div class="file-upload">
                             <label for="upload1" class="file-upload__label">Upload Folder</label>
@@ -31,6 +35,7 @@
                             <label for="upload2" class="file-upload__label">Upload Files</label>
                             <input hyperhost-upload id="upload2" class="file-upload__input" type="file" name="file-upload" multiple>
                         </div>
+-->
                     </div>
                 </div>
                 <div ngf-no-file-drop>File Drag/Drop is not supported for this browser</div>
