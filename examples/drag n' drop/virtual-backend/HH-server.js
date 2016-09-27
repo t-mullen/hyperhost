@@ -54,5 +54,4 @@ app.all('/any/possible/route', function (req, res) {
     res.kill(); //We can also kill the connection (this frees up resources but the client will no longer be able to make requests during their session)
 });
 
-
 app.listen(); //This starts the virtual backend

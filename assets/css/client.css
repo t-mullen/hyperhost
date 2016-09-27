@@ -1,11 +1,6 @@
-@font-face {
-    font-family: Neo;
-    src: url(neo.ttf) format('truetype');
-}
-
-#HYPERHOST-html {
+html {
     position: relative;
-    background: black;
+    background: white;
     height: 100%;
 }
 
@@ -15,24 +10,22 @@
     left: 30px;
     bottom: 30px;
     right: 30px;
-    border: #d4ac00 2px dashed;
     text-align: center;
-    color: transparent;
-    background: transparent;
     max-width: none;
     min-height: 80%;
-    color: #d4ac00;
 }
 
 #HYPERHOST-dropzone > div {
-    margin-top: 160px;
     pointer-events: none;
-    font-family: Neo;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: Arial;
 }
 
 #HYPERHOST-dropzone a {
     text-decoration: none;
-    color: #d4ac00;
+    color: black;
     cursor: pointer;
     pointer-events: all;
 }
@@ -52,6 +45,6 @@
     width: 100%;
     height: 100%;
     display: none;
-    border: #d4ac00 20px;
+    border: transparent 20px;
     background: white;
 }

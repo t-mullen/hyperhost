@@ -6,6 +6,8 @@ Uses WebRTC to host static websites from the browser.
 var HyperHost = (function () {
     'use strict';
     var module = {};
+    var $scope;
+    module.VERSION = "2.0.0";
 
     /*------- Redirect clients to the client.html -----*/
     function getParameterByName(name, url) {
@@ -67,6 +69,7 @@ var HyperHost = (function () {
         if (initialized && !forceReload) {
             return;
         }
+        console.log("> Initializing HyperHost...");
         initialized = true;
 
         var rawViews = []; //Html, css, js... files that load children (always text files)
@@ -74,6 +77,7 @@ var HyperHost = (function () {
         var fileCount = 0;
         var realFileCount = 0; //Just used for loading stats
         var traversalComplete = false;
+        var foundIndex = false;
         var serverCode;
         var MY_ID; //Our PeerJS id
         var peer;
@@ -86,7 +90,6 @@ var HyperHost = (function () {
                     var reader = new FileReader();
                     fileCount++;
                     realFileCount++;
-                    document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Found " + realFileCount + " files.";
                     var ext = item.name.split(".");
                     ext = ext[ext.length - 1].toLowerCase();
                     if (["html", "css"].indexOf(ext) !== -1) { //These files need to be read as text, so we can replace URLs within them
@@ -97,6 +100,9 @@ var HyperHost = (function () {
                                 extension: ext,
                                 isRoot: depth <= 1
                             });
+                            if (path+item.name === "index.html"){
+                                foundIndex=true;
+                            }
                             fileCount--;
                             if (fileCount === 0 && traversalComplete) {
                                 preprocessFiles();
@@ -152,9 +158,10 @@ var HyperHost = (function () {
         }
 
         function preprocessFiles() {
+            console.log("> Preparing to encode "+rawViews.length +" assets...");
+            console.success("> Done!");
+            console.log("> Encoding view elements...");
             for (var i = 0; i < rawViews.length; i++) {
-                document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Encoding assets " + i + 1 + "/" + rawViews.length + 1;
-
                 //Replace asset URLs with their data URL
                 for (var i2 = 0; i2 < assets.length; i2++) {
                     if (rawViews[i].isRoot) {
@@ -171,9 +178,10 @@ var HyperHost = (function () {
                 }
 
             }
+            console.success("> Done!");
+            console.log("> Encoding subfiles...");
             for (var i = 0; i < rawViews.length; i++) {
-                if (rawViews[i].invalid) continue;
-                document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Encoding subfiles " + i + 1 + "/" + rawViews.length + 1;
+                if (rawViews[i].invalid) continue;          
 
                 //Determine rawView dependencies
                 if (rawViews[i].extension === "html") { //Only html-out referencing is supported (should be suitable for most cases)
@@ -207,27 +215,33 @@ var HyperHost = (function () {
                     }
                 }
             }
+            console.success("> Done!");
+            
+            if (!foundIndex){
+                console.error("No file 'index.html' at top level of directory. Unable to host. Refresh to try again.");
+                return;
+            }
 
-            document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Starting server...";
+            console.log("> Preparing to host static website...");
+            console.success("> Done!");
 
             HYPERHOST_SERVE(); //We can now serve the processed files to anyone who requests them
         }
 
 
-        //Handles a folder drop event
-        function handleDropEvent(event) {
-            event.preventDefault();
-            event.stopPropagation();
-
+        //Handles a folder or single-file drop event
+        module.handleRawDropEvent= function(dataTransfer, scope) {
             if (traversalComplete) {
                 return;
             }
+            
+            $scope=scope;
 
-            document.getElementById("HYPERHOST-header").innerHTML = "Loading...";
-            document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Traversing folder structure...";
+            console.log("******* HyperHost v"+module.VERSION+" *******");
+            console.log("> Loading your files...");
 
             //TODO: Get folder parsing working for Firefox 42+
-            var items = event.dataTransfer.items;
+            var items = dataTransfer.items;
             for (var i = 0; i < items.length; i++) {
                 var item = items[i].webkitGetAsEntry();
                 if (item) {
@@ -235,20 +249,26 @@ var HyperHost = (function () {
                 }
             }
             traversalComplete = true;
-            event.target.style.borderColor = '#d4ac00';
+            console.success("> Done!");
         }
-        //Set drag n' drop event listeners
-        document.getElementById("HYPERHOST-dropzone").addEventListener("drop", handleDropEvent, false);
-        document.getElementById("HYPERHOST-dropzone").addEventListener("dragover", function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        });
-        document.getElementById("HYPERHOST-dropzone").addEventListener("dragenter", function (event) {
-            event.target.style.borderColor = '#00ea09';
-        });
-        document.getElementById("HYPERHOST-dropzone").addEventListener("dragleave", function (event) {
-            event.target.style.borderColor = '#d4ac00';
-        });
+        
+        //Handles an array of files (no nesting)
+        module.handleFiles = function(files, scope){
+            if (traversalComplete) {
+                return;
+            }
+            
+            $scope=scope;
+            console.log("******* HyperHost v"+module.VERSION+" *******");
+            console.log("> Loading your files...");
+            
+            for (var i=0; i<files.length; i++){
+                traverseFileTree(files[i]);
+            }
+            
+            traversalComplete = true;
+            console.success("> Files loaded!");
+        }
 
 
         //Serve incoming WebRTC connections
@@ -291,19 +311,17 @@ var HyperHost = (function () {
 
             //Update URL to reflect where clients can connect (without reloading)
             var clientURL = window.location.protocol + "//" + window.location.host + window.location.pathname + "?site=" + MY_ID;
-            window.history.pushState({
-                path: clientURL
-            }, '', clientURL);
-            document.getElementById("another").style.display = "inherit";
+            clientURL = clientURL.replace('index.html', 'client.html');
+            $scope.setClientURL(clientURL);
 
             peer.on('error', function (err) {
                 console.error(err);
             });
 
             peer.on('connection', function (conn) {
-                console.log("Connected to peer!");
+                console.log("> Connected to peer!");
                 conn.on("open", function () {
-                    console.log("Serving website to peer...");
+                    console.log("> Serving website to peer...");
                     conn.send({
                         type: "serve",
                         content: {
@@ -311,6 +329,10 @@ var HyperHost = (function () {
                             hasVirtualBackend: !!serverCode //Converts serverCode to boolean. Server code is NOT being sent
                         }
                     });
+                });
+                
+                conn.on("close", function () {
+                    console.log("> Peer closed the connection.");
                 });
 
                 //Any data received by the server is intended for the virtual backend
@@ -328,48 +350,61 @@ var HyperHost = (function () {
                 });
             });
 
+            var failures = 0;
             peer.on('disconnected', function () {
+                console.warn("> WARNING:Disconnected from server, attempting reconnection...");
                 peer.reconnect(); //Auto-reconnect
+                
                 var check = window.setInterval(function () { //Check the reconnection worked
                     if (!peer.disconnected) {
-                        console.log("Reconnected to server.");
+                        console.success("> Reconnected to server.");
+                        var failures = 0;
                         window.clearInterval(check);
                     } else {
-                        //TODO: Handle reconneciton failure
+                        failures++;
+                        console.warn("> WARNING: Reconnection failed ("+failures+"/"+MAX_RECONNECT_FAILURES+")");
+                        if (failures >= MAX_RECONNECT_FAILURES){
+                            console.error("> FATAL ERROR: Could not reconnect to signalling server.");
+                        }
                     }
                 }, 1000);
             });
 
             if (serverCode) {
-                console.log("Virtual backend detected! Initializing...")
+                console.log("> Virtual backend detected! Loading modules...");
 
                 //Inject the virtual backend modules
                 injectScripts(moduleListing, function () {
+                    console.success("> Done!");
+                    console.log("> Injecting virtual server code...")
                     moduleListing.push('hyperhost'); // Add the Hyperhost module (this module is unique in this respect)
                     module.modules['hyperhost'] = hyperhostRequireModule;
 
                     //Inject the virtual backend code after modules loaded
-
                     var script = document.createElement('script');
                     script.setAttribute('type', 'text/javascript');
-                    script.setAttribute('src', serverCode);
+                    script.setAttribute('src', serverCode);    
+                    console.success("> Done!");
+                    console.log("> Virtual server starting...");
                     document.head.appendChild(script);
+                    console.success("> Done!");
+                    console.warn("> WARNING: Hosting will stop if this window is closed!");
+                    console.success("> Hosted at "+clientURL);
                 });
             } else {
-                console.log("No HH-server.js. Assuming there is no backend.");
+                console.log("> No HH-server.js. Assuming there is no virtual server.");
+                console.warn("> WARNING: Hosting will stop if this window is closed!");
+                console.success("> Hosted at "+clientURL);
             }
 
             window.onbeforeunload = function () {
                 return "Your site will no longer be hosted if you leave!"; //Alert before leaving!
             }
-            document.querySelector("#HYPERHOST-dropzone > div > h1").innerHTML = "<a target='_blank' href='" + clientURL + "'>Hosted on<br>" + clientURL + "</a>";
-            document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Do not close this window!";
-            document.querySelector("#HYPERHOST-dropzone > div > p").style.display = "none";
-            document.querySelector("#HYPERHOST-dropzone").style.border = "none";
+            $scope.finishDeploying();
         };
+        console.log("> Initialization complete.");
     }
-    
-    document.addEventListener("DOMContentLoaded", initializeHost, false);
+    module.initializeHost=initializeHost;
 
 
     /*---------------- Dynamic/Virtual Backend ----------------*/
@@ -380,7 +415,7 @@ var HyperHost = (function () {
     //The 'require' emulator
     module.require = function (moduleName) {
         if (moduleListing.indexOf(moduleName) === -1) {
-            console.error("Module '" + moduleName + "' does not exist! Did you upload it?");
+            console.error("> Module '" + moduleName + "' does not exist! Did you upload it?");
             return;
         } else {
             return module.modules[moduleName];
@@ -430,7 +465,7 @@ var HyperHost = (function () {
                         if (!listening) return; //Ignore requests made before server is started
                         if (route !== e.detail.request.route) return; //Ignore invalid routes TODO: error here
                         if (routerFunction.methods.indexOf(e.detail.request.method.toLowerCase()) === -1) { //Block invalid method
-                            console.error("Client attempted unsupported method '" + e.detail.request.method + "' on route '" + route + "'");
+                            console.error("> Client requested unsupported route '" + e.detail.request.method + "' on route '" + route + "'");
                             return;
                         }
                         console.log(e.detail.id + " : " + e.detail.request.method.toUpperCase() + " " + route)
@@ -449,7 +484,7 @@ var HyperHost = (function () {
             //Allows requests to be served
             app.listen = function () {
                 listening = true;
-                console.log("Virtual server running...");
+                console.log("> Virtual server running...");
             }
 
             return app;
@@ -460,3 +495,4 @@ var HyperHost = (function () {
 
     return module;
 })();
+HyperHost.initializeHost();

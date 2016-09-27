@@ -66,6 +66,9 @@ Thomas Mullen 2016
 
 
         var OTHER_ID = getParameterByName("site", document.location); //Get the server's id from url
+        if (!OTHER_ID){ //If no siteId, just go to main HyperHost
+            window.location = window.location.href.replace("client.html", "index.html");
+        }
 
         peer.on('error', function (err) {
             console.error(err);
@@ -139,7 +142,7 @@ Thomas Mullen 2016
             for (var i = 0; i < rawViews.length; i++) { //Search for the path
                 if (rawViews[i].path === path) {
                     document.getElementById("HYPERHOST-viewframe").srcdoc = rawViews[i].body;
-                    if (!goingBack) history.replaceState(path, path);
+                    if (!goingBack) history.pushState(path, path);
                     console.log("Navigated to " + path);
                     return;
                 }

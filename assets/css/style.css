@@ -1,0 +1,132 @@
+.nav > li {
+    cursor: pointer;
+}
+
+body {
+    overflow: hidden;
+}
+
+.sidebar .logo .simple-text,
+body > .navbar-collapse .logo .simple-text {
+    font-size: 30px;
+}
+
+#world-map {
+    height: 700px;
+    width: 100%;
+}
+
+#world-map > .jvectormap-container {
+    height: 100%;
+    width: 100%;
+}
+
+.sidebar .nav > li.active-pro {
+    position: absolute;
+    width: 100%;
+    bottom: 10px;
+}
+
+.font-icon-detail > i {
+    font-size: 80px;
+}
+
+.table-users td {
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+
+.sidebar .nav {
+    margin-top: 0 !important;
+}
+
+.sidebar-dropdown > .nav {
+    margin-left: 45px;
+}
+
+.nav > li > a:hover {
+    background: rgba(255, 255, 255, 0.23) !important;
+}
+
+.nav > li > a {
+    opacity: 1 !important;
+}
+
+.hyper-dropzone {
+    border: #bababa 2px dashed;
+    margin: 20px;
+    height: 400px;
+}
+
+.hyper-dropzone > div {
+    text-align: center;
+    pointer-events: none;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.dragover {
+    border: #87CB16 2px dashed;
+    background: #efffd5;
+}
+
+.file-upload {
+    width: 100px;
+    display: inline-block;
+    pointer-events: all;
+}
+
+.file-upload__label {
+    padding: 1em 2em;
+    color: black !important;
+    background: #b3ccff;
+    border-radius: .4em;
+    transition: background .3s;
+}
+
+.file-upload__label:hover {
+    cursor: pointer;
+    background: #000;
+    color:white !important;
+}
+
+.file-upload__input {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    font-size: 1;
+    width: 0;
+    height: 100%;
+    opacity: 0;
+}
+
+.console {
+    background: black;
+    padding: 20px;
+    margin: 20px;
+    max-height: 700px;
+    overflow: auto;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
