@@ -23,6 +23,44 @@ Thomas Mullen 2016
 
     var conn;
 
+    //Define the HyperRequest object (akin to XMLHttpRequest)
+    var HyperRequestSrc = 'var HyperRequest=function(){var e={};return e.onload=function(){},e.open=function(t,n){e.method=t,e.route=n},e.send=function(t){function n(t){"response"===t.detail.type&&t.detail.id===r&&(window.removeEventListener(i,n),e.onload(t.detail.response))}var o=window.parent,r=Math.random().toString().substr(0,30),d=new CustomEvent("hypermessage",{detail:{type:"request",request:{method:e.method,route:e.route,body:t},id:r}});o.dispatchEvent(d);var i=window.addEventListener("hypermessage",n)},e};';
+    /*
+    var HyperRequest = function () {
+        var self = {};
+        self.onload = function () {}
+        self.open = function (method, route) {
+            self.method = method;
+            self.route = route;
+        }
+        self.send = function (body) {
+            var parent = window.parent;
+            var id = Math.random().toString().substr(0, 30);
+            var event = new CustomEvent("hypermessage", {
+                detail: {
+                    type: "request",
+                    request: {
+                        method: self.method,
+                        route: self.route,
+                        body: body
+                    },
+                    id: id
+                }
+            });
+            parent.dispatchEvent(event)
+
+            function handleResponse(e) {
+                if (e.detail.type === "response" && e.detail.id === id) {
+                    window.removeEventListener(listener, handleResponse);
+                    self.onload(e.detail.response);
+                }
+            }
+            var listener = window.addEventListener('hypermessage', handleResponse);
+        }
+        return self;
+    }
+    */
+
     function initialize(event) {
         if (initialized) return;
         initialized = true;
@@ -62,42 +100,6 @@ Thomas Mullen 2016
                     timeoutId = 0;
                 }
             };
-        }
-
-
-        //Define the HyperRequest object (akin to XMLHttpRequest)
-        window.HyperRequest = function () {
-            var self = {};
-            self.onload = function () {}
-            self.open = function (method, route) {
-                self.method = method;
-                self.route = route;
-            }
-            self.send = function (body) {
-                var parent = window.parent;
-                var id = Math.random().toString().substr(0, 30);
-                var event = new CustomEvent("hypermessage", {
-                    detail: {
-                        type: "request",
-                        request: {
-                            method: self.method,
-                            route: self.route,
-                            body: body
-                        },
-                        id: id
-                    }
-                });
-                parent.dispatchEvent(event)
-
-                function handleResponse(e) {
-                    if (e.detail.type === "response" && e.detail.id === id) {
-                        window.removeEventListener(listener, handleResponse);
-                        self.onload(e.detail.response);
-                    }
-                }
-                var listener = window.addEventListener('hypermessage', handleResponse);
-            }
-            return self;
         }
 
 
@@ -176,8 +178,9 @@ Thomas Mullen 2016
     function HYPERHOST_NAVIGATE(path, goingBack) {
         for (var i = 0; i < rawViews.length; i++) { //Search for the path
             for (var i = 0; i < rawViews.length; i++) { //Search for the path
-                if (rawViews[i].path === path) {
-                    document.getElementById("HYPERHOST-viewframe").srcdoc = rawViews[i].body;
+                if (rawViews[i].path === path) {           
+                    document.getElementById("HYPERHOST-viewframe").srcdoc = rawViews[i].body.replace('<html>', '<html><script>'+HyperRequestSrc+'</script>');
+
                     if (!goingBack) history.pushState(path, path);
                     console.log("Navigated to " + path);
                     return;
@@ -199,4 +202,4 @@ Thomas Mullen 2016
         HYPERHOST_NAVIGATE(event.state, true);
     });
 
-})();
+}());
