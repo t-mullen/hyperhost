@@ -29,42 +29,102 @@ var HyperHost = (function () {
     if (siteParameter && document.location.toString().indexOf('client.html') === -1) {
         document.location = "/HyperHost/client.html?site=" + siteParameter; //Add our peerId to the url
     }
+    
+    // dash-case to camelCase
+    function camelize(str){
+        return str.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+    }
+
+
+    //Ajax
+    var ajax = function (url, forceCORS, successCallback, errorCallback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", (forceCORS ? "https://crossorigin.me/" : "") + url, true);
+        xhr.onload = function (e) {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    if (successCallback && successCallback.constructor == Function) {
+                        return successCallback(xhr.responseText);
+                    }
+                } else {
+                    if (errorCallback && errorCallback.constructor == Function) {
+                        return errorCallback(xhr.statusText);
+                    } else {
+                        console.error("Failed to get resource '" + url + "' Error: " + xhr.statusText);
+                    }
+                }
+            }
+        };
+        xhr.onerror = function (e) {
+            if (errorCallback && errorCallback.constructor == Function) {
+                return errorCallback(xhr.statusText);
+            } else {
+                console.error("Failed to get resource. Error: " + xhr.statusText);
+            }
+        };
+        xhr.send(null);
+    };
+
+    //Ajax-es an array of urls, only returning when all have been loaded
+    var ajaxMulti = function (arr, forceCORS, successCallback, errorCallback) {
+        var result = [];
+        var remaining = arr.length;
+        for (var i = 0; i < arr.length; i++) {
+            ajax(arr[i], forceCORS,
+                function (data) {
+                    result[i] = data;
+                    remaining--;
+                    if (remaining === 0) {
+                        successCallback(result);
+                    }
+                }, errorCallback);
+        }
+    }
+
     // Injects an array of urls to scripts
-    function injectScripts(scripts, callback) {
+    function injectScripts(scripts, mappingObject, callback) {
+        var remaining = scripts.length;
+        
         function loadScript(i) {
             var script = document.createElement("script");
             script.type = "text/javascript";
 
             if (script.readyState) { //IE
                 script.onreadystatechange = function () {
-                    if (script.readyState === "loaded" || script.readyState === "complete") {
+                    if (script.readyState === "loaded" || script.readyState === "complete") {  
                         script.onreadystatechange = null;
-                        if (i === scripts.length - 1) {
+                        remaining--;
+                        if (remaining === 0) {
                             callback();
-                        }else{
-                            loadScript(i + 1);  
+                        } else {
+                            if (i < scripts.length-1) {
+                                loadScript(i + 1);
+                            }
                         }
                     }
                 };
             } else { //Others
                 script.onload = function () {
-                    if (i === scripts.length - 1) {
+                    remaining--;
+                    if (remaining === 0) {
                         callback();
                     } else {
-                        loadScript(i + 1);
+                        if (i < scripts.length-1) {
+                            loadScript(i + 1);
+                        }
                     }
                 };
             }
 
-            script.src = module.modules[scripts[i]];
+            script.src = mappingObject[scripts[i]];
             document.getElementsByTagName("head")[0].appendChild(script);
         }
         loadScript(0);
     }
-    /*---------------- Static/Base Backend ----------------*/
 
     // Initialize the host
     var initialized = false;
+
     function initializeHost(forceReload) {
         if (initialized && !forceReload) {
             return;
@@ -74,6 +134,7 @@ var HyperHost = (function () {
 
         var rawViews = []; //Html, css, js... files that load children (always text files)
         var assets = []; //Images, fonts... files that cannot load children (can be url encoded)
+        var jsonFiles = []; //JSON files for access by the server
         var fileCount = 0;
         var realFileCount = 0; //Just used for loading stats
         var traversalComplete = false;
@@ -92,16 +153,20 @@ var HyperHost = (function () {
                     realFileCount++;
                     var ext = item.name.split(".");
                     ext = ext[ext.length - 1].toLowerCase();
-                    if (["html", "css"].indexOf(ext) !== -1) { //These files need to be read as text, so we can replace URLs within them
+                    if (["html", "css", "json"].indexOf(ext) !== -1) { //These files need to be read as text, so we can replace URLs within them or use them immediately
                         reader.addEventListener("load", function () {
-                            rawViews.push({
-                                body: reader.result,
-                                path: path + item.name,
-                                extension: ext,
-                                isRoot: depth <= 1
-                            });
-                            if (path+item.name === "index.html"){
-                                foundIndex=true;
+                            if (ext === "json") {
+                                jsonFiles[path + item.name.split(".")[0]] = JSON.parse(reader.result); //JSON files are reserved for the server. If you need them in client, use a virtual backend to serve them
+                            } else {
+                                rawViews.push({
+                                    body: reader.result,
+                                    path: path + item.name,
+                                    extension: ext,
+                                    isRoot: depth <= 1
+                                });
+                                if (path + item.name === "index.html") {
+                                    foundIndex = true;
+                                }
                             }
                             fileCount--;
                             if (fileCount === 0 && traversalComplete) {
@@ -122,11 +187,11 @@ var HyperHost = (function () {
                             } else {
                                 var isFont = ["eot", "woff", "woff2", "ttf", "svg", "sfnt", "otf"].indexOf(ext) !== -1;
                                 assets.push({
-                                    "old" : path + item.name,
-                                    "new" : reader.result,
-                                    "extension" : ext,
-                                    "itemName" : item.name,
-                                    "isFont" : isFont
+                                    "old": path + item.name,
+                                    "new": reader.result,
+                                    "extension": ext,
+                                    "itemName": item.name,
+                                    "isFont": isFont
                                 });
                             }
                             fileCount--;
@@ -158,7 +223,7 @@ var HyperHost = (function () {
         }
 
         function preprocessFiles() {
-            console.log("> Preparing to encode "+rawViews.length +" assets...");
+            console.log("> Preparing to encode " + rawViews.length + " assets...");
             console.success("> Done!");
             console.log("> Encoding view elements...");
             for (var i = 0; i < rawViews.length; i++) {
@@ -181,7 +246,7 @@ var HyperHost = (function () {
             console.success("> Done!");
             console.log("> Encoding subfiles...");
             for (var i = 0; i < rawViews.length; i++) {
-                if (rawViews[i].invalid) continue;          
+                if (rawViews[i].invalid) continue;
 
                 //Determine rawView dependencies
                 if (rawViews[i].extension === "html") { //Only html-out referencing is supported (should be suitable for most cases)
@@ -216,8 +281,8 @@ var HyperHost = (function () {
                 }
             }
             console.success("> Done!");
-            
-            if (!foundIndex){
+
+            if (!foundIndex) {
                 console.error("No file 'index.html' at top level of directory. Unable to host. Refresh to try again.");
                 return;
             }
@@ -230,14 +295,14 @@ var HyperHost = (function () {
 
 
         //Handles a folder or single-file drop event
-        module.handleRawDropEvent= function(dataTransfer, scope) {
+        module.handleRawDropEvent = function (dataTransfer, scope) {
             if (traversalComplete) {
                 return;
             }
-            
-            $scope=scope;
 
-            console.log("******* HyperHost v"+module.VERSION+" *******");
+            $scope = scope;
+
+            console.log("******* HyperHost v" + module.VERSION + " *******");
             console.log("> Loading your files...");
 
             //TODO: Get folder parsing working for Firefox 42+
@@ -251,23 +316,28 @@ var HyperHost = (function () {
             traversalComplete = true;
             console.success("> Done!");
         }
-        
+
         //Handles an array of files (no nesting)
-        module.handleFiles = function(files, scope){
+        module.handleFiles = function (files, scope) {
             if (traversalComplete) {
                 return;
             }
-            
-            $scope=scope;
-            console.log("******* HyperHost v"+module.VERSION+" *******");
+
+            $scope = scope;
+            console.log("******* HyperHost v" + module.VERSION + " *******");
             console.log("> Loading your files...");
-            
-            for (var i=0; i<files.length; i++){
+
+            for (var i = 0; i < files.length; i++) {
                 traverseFileTree(files[i]);
             }
-            
+
             traversalComplete = true;
             console.success("> Files loaded!");
+        }
+
+        //Gets a Wzrd.in url from module name
+        function getWzrdModuleUrl(name) {
+            return "https://tmullen-bcdn.herokuapp.com/debug-standalone/" + name + jsonFiles["package"]["dependencies"][name];
         }
 
 
@@ -330,7 +400,7 @@ var HyperHost = (function () {
                         }
                     });
                 });
-                
+
                 conn.on("close", function () {
                     console.log("> Peer closed the connection.");
                 });
@@ -354,7 +424,7 @@ var HyperHost = (function () {
             peer.on('disconnected', function () {
                 console.warn("> WARNING:Disconnected from server, attempting reconnection...");
                 peer.reconnect(); //Auto-reconnect
-                
+
                 var check = window.setInterval(function () { //Check the reconnection worked
                     if (!peer.disconnected) {
                         console.success("> Reconnected to server.");
@@ -362,8 +432,8 @@ var HyperHost = (function () {
                         window.clearInterval(check);
                     } else {
                         failures++;
-                        console.warn("> WARNING: Reconnection failed ("+failures+"/"+MAX_RECONNECT_FAILURES+")");
-                        if (failures >= MAX_RECONNECT_FAILURES){
+                        console.warn("> WARNING: Reconnection failed (" + failures + "/" + MAX_RECONNECT_FAILURES + ")");
+                        if (failures >= MAX_RECONNECT_FAILURES) {
                             console.error("> FATAL ERROR: Could not reconnect to signalling server.");
                         }
                     }
@@ -371,10 +441,21 @@ var HyperHost = (function () {
             });
 
             if (serverCode) {
+                var npmModuleList = Object.keys(jsonFiles['package']["dependencies"]);
+                moduleListing = moduleListing.concat(npmModuleList);
                 console.log("> Virtual backend detected! Loading modules...");
-
+                //Generate urls for wzrd.in files
+                for (var i = 0; i < npmModuleList.length; i++) {
+                    module.modules[npmModuleList[i]] = getWzrdModuleUrl(npmModuleList[i]);
+                }
                 //Inject the virtual backend modules
-                injectScripts(moduleListing, function () {
+                injectScripts(moduleListing, module.modules, function () {
+                    //Wzrd will put everything on the window, so we need to move it to the modules
+                    for (var i = 0; i < npmModuleList.length; i++) {
+                        module.modules[npmModuleList[i]] = window[camelize(npmModuleList[i])];
+                        console.log(window[npmModuleList[i]]);
+                    }
+
                     console.success("> Done!");
                     console.log("> Injecting virtual server code...")
                     moduleListing.push('hyperhost'); // Add the Hyperhost module (this module is unique in this respect)
@@ -383,18 +464,19 @@ var HyperHost = (function () {
                     //Inject the virtual backend code after modules loaded
                     var script = document.createElement('script');
                     script.setAttribute('type', 'text/javascript');
-                    script.setAttribute('src', serverCode);    
+                    script.setAttribute('src', serverCode);
                     console.success("> Done!");
                     console.log("> Virtual server starting...");
+                    window.require = module.require;
                     document.head.appendChild(script);
                     console.success("> Done!");
                     console.warn("> WARNING: Hosting will stop if this window is closed!");
-                    console.success("> Hosted at "+clientURL);
+                    console.success("> Hosted at " + clientURL);
                 });
             } else {
                 console.log("> No HH-server.js. Assuming there is no virtual server.");
                 console.warn("> WARNING: Hosting will stop if this window is closed!");
-                console.success("> Hosted at "+clientURL);
+                console.success("> Hosted at " + clientURL);
             }
 
             window.onbeforeunload = function () {
@@ -404,7 +486,7 @@ var HyperHost = (function () {
         };
         console.log("> Initialization complete.");
     }
-    module.initializeHost=initializeHost;
+    module.initializeHost = initializeHost;
 
 
     /*---------------- Dynamic/Virtual Backend ----------------*/

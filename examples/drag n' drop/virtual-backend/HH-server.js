@@ -8,10 +8,10 @@ See exampleClient.js for how to make requests to this server.
 */
 
 
-// We can use 'Hyperhost.require' as we would with Node's 'require'.
-var hyperhost = HyperHost.require('hyperhost'); //This module enables to interact with HyperHost. It is similar to Express
-var custom = HyperHost.require('custom'); //Require custom modules
-var fs = HyperHost.require('fs'); //We can require any Browserified modules
+// We can use 'require' as we would with Node's 'require'.
+var hyperhost = require('hyperhost'); //This module enables to interact with HyperHost. It is similar to Express
+var custom = require('custom'); //Require custom modules
+var fs = require('browserify-fs'); //We can require any modules that work with Browserify
 
 var app = hyperhost.createApp(); //Creates our app
 
@@ -25,6 +25,7 @@ app.get('/', function (req, res) {
     custom.someFunction();
     fs.mkdir('/home');
     fs.writeFile('/home/hello-world.txt', "Virtual file system? Yes please!");
+    console.log(fs);
     
     //We can send any data over the connection (including files, blobs, anything)
     res.send({

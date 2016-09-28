@@ -14,9 +14,8 @@ If you need more than a static website, HyperHost allows you to create a virtual
 
 Put your server code in a file named **HH-server.js**, then drag n' drop as you would a static site.
 ```
-var hyperhost = HyperHost.require('hyperhost'); //This module enables us to act as a server for clients. It is similar to Express.
-var custom = HyperHost.require('custom'); //Require custom modules
-var fs = HyperHost.require('fs'); //We can require any Browserified modules
+var hyperhost = require('hyperhost'); //This module enables us to act as a server for clients. It is similar to Express.
+var fs = require('fs'); //We can require any Browserified modules
 
 var app = hyperhost.createApp(); //Creates our app
 

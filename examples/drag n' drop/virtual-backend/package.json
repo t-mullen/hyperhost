@@ -1,0 +1,9 @@
+{
+  "name": "NodejsStarterApp",
+  "scripts": {
+    "start": "app.js"
+  },
+  "dependencies": {
+    "browserify-fs": ""
+  }
+}
