@@ -336,8 +336,8 @@ var HyperHost = (function () {
         }
 
         //Gets a Wzrd.in url from module name
-        function getWzrdModuleUrl(name) {
-            return "https://tmullen-bcdn.herokuapp.com/debug-standalone/" + name + jsonFiles["package"]["dependencies"][name];
+        function getWzrdModuleUrl(name, version) {
+            return "https://tmullen-bcdn.herokuapp.com/debug-standalone/" + name + jsonFiles["package"]["dependencies"][name] + (!!version ? "@"+version : "");
         }
 
 
@@ -446,7 +446,7 @@ var HyperHost = (function () {
                 console.log("> Virtual backend detected! Loading modules...");
                 //Generate urls for wzrd.in files
                 for (var i = 0; i < npmModuleList.length; i++) {
-                    module.modules[npmModuleList[i]] = getWzrdModuleUrl(npmModuleList[i]);
+                    module.modules[npmModuleList[i]] = getWzrdModuleUrl(npmModuleList[i], jsonFiles["package"]["dependencies"][npmModuleList[i]]);
                 }
                 //Inject the virtual backend modules
                 injectScripts(moduleListing, module.modules, function () {

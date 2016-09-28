@@ -1,26 +1,37 @@
 # HyperHost
 ##Webservers, without servers.
 
-HyperHost allows you to host websites directly from your browser using P2P WebRTC and a custom rendering framework.
+HyperHost makes hosting completely free by running a virtual Node server in your browser. Connections are made with Peer-to-Peer WebRTC.
 
-Simply go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the root folder of your website containing at least a **index.html**. Your website will be proccessed and a link to your hosted site will appear after a few seconds. Then, anyone* can access your site at the same URL. That's it.
+To host a static website go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the folder of any website containing at least a **index.html**. A link to your hosted site will appear after a few seconds. Then, anyone with a WebRTC enabled browser can see it from anywhere. That's it. No server hosting your files, no charges, just direct hosting.
 
-Your site will be available so long as your browser has an uninterrupted network connection. All resources are served via a encrypted P2P connection. Any static resources can be served.
+Your site will be available so long as your browser window is open. All resources are served via a encrypted P2P connection.
 
 ##Go Beyond Static Websites
-If you need more than a static website, HyperHost allows you to create a virtual server that uses your browser runtime.  
-*Any* [Browserify](https://www.npmjs.com/package/browserify) module can easily be converted. See converted_modules/READEME.md for more information.
+You can also host a Node server straight in your browser.
 
-
-Put your server code in a file named **HH-server.js**, then drag n' drop as you would a static site.
+Put your server's starting code in a file called **HH-server.js**, then drag n' drop into HyperHost like you would a static site.  
+Put any additional server code in files with the **HH-** extension. We can **require** these.
+Put any modules you need to be downloaded from NPM in a file called **package.json**
 ```
-var hyperhost = require('hyperhost'); //This module enables us to act as a server for clients. It is similar to Express.
-var fs = require('fs'); //We can require any Browserified modules
+folder-to-drop
+    HH-server.js
+    HH-custom.js  //An example of custom module (not required)
+    package.json
+    index.html
+    //Any other static resources to be served normally...
+    css
+        style.css
+    js
+        client-side-script.js
+```
 
+Here is an example HH-server.js
+```javascript
+var hyperhost = require('hyperhost'); //This module lets us handle P2P connections
+var fs = require('browserify-fs'); //We can require ANY module that can be Browserified
+var custom = require('custom"); We can require our other server files.
 var app = hyperhost.createApp(); //Creates our app
-
-
-//Requests to this server are done via HyperHost P2P clients and are NOT ordinary HTTP requests!
 
 //Handles 'get requests' to the '/' route
 app.get('/', function (req, res) {
@@ -40,67 +51,22 @@ app.get('/', function (req, res) {
     });
 });
 
-//Handles 'post requests' to the  '/myroute' route
-app.post('/myroute', function (req, res) {
-    //A more advanced way of doing the same thing
-    res.body = {
-        array: [1, 2, 3],
-        object: {},
-        int: 5
-    }
-    res.body.int = 6;
-    res.end(); //Call res.end() when finished. res.send() calls this automatically.
-});
-
-//Handles both 'post' and 'get' requests 
-app.all('/any/possible/route', function (req, res) {
-    res.statuscode = 404; //We can define status codes
-    res.kill(); //We can also kill the connection (this frees up resources but the client will no longer be able to make requests during their session)
-});
-
-
 app.listen(); //This starts the virtual backend
 ```
 
-You can interact with this server via any website hosted in HyperHost by defining the HyperRequest class in any client-side script. 
-```
-//This script enables us to make requests to the virtual backend
-var HyperRequest = function () {
-    var self = {};
-    self.onload = function () {}
-    self.open = function (method, route) {
-        self.method = method;
-        self.route = route;
-    }
-    self.send = function (body) {
-        var parent = window.parent;
-        var id = Math.random().toString().substr(0, 30);
-        var event = new CustomEvent("hypermessage", {
-            detail: {
-                type: "request",
-                request: {
-                    method: self.method,
-                    route: self.route,
-                    body: body
-                },
-                id: id
-            }
-        });
-        parent.dispatchEvent(event)
-
-        function handleResponse(e) {
-            if (e.detail.type === "response" && e.detail.id === id) {
-                window.removeEventListener(listener, handleResponse);
-                self.onload(e.detail.response);
-            }
-        }
-        var listener = window.addEventListener('hypermessage', handleResponse);
-    }
-    return self;
+Here is an example of **package.json**
+```javascript
+{
+  "name": "MyNodeApp",
+  "dependencies": { 
+    "browserify-fs": ">1.0.0", //These are modules that will be pulled from NPM
+    "crypto-browserify" : "", //Don't specify a version number for the latest version
+  }
 }
 ```
 
-
+Calls to this virtual server can only be made from the site being hosted.  
+HyperHost defines the `HyperRequest` object, which is similar to the `XMLHttpRequest` object.
 ```
 //Here is an example request
 var hyp = HyperRequest(); //Create a new HyperRequest
@@ -115,7 +81,6 @@ hyp.send({ //Send arbitrary data to server
     evenMore: {}
 });
 ```
-
 
 ##Great for demos and hackathons!
 

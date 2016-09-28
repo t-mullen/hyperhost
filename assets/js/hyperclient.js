@@ -65,8 +65,44 @@ Thomas Mullen 2016
         }
 
 
+        //Define the HyperRequest object (akin to XMLHttpRequest)
+        window.HyperRequest = function () {
+            var self = {};
+            self.onload = function () {}
+            self.open = function (method, route) {
+                self.method = method;
+                self.route = route;
+            }
+            self.send = function (body) {
+                var parent = window.parent;
+                var id = Math.random().toString().substr(0, 30);
+                var event = new CustomEvent("hypermessage", {
+                    detail: {
+                        type: "request",
+                        request: {
+                            method: self.method,
+                            route: self.route,
+                            body: body
+                        },
+                        id: id
+                    }
+                });
+                parent.dispatchEvent(event)
+
+                function handleResponse(e) {
+                    if (e.detail.type === "response" && e.detail.id === id) {
+                        window.removeEventListener(listener, handleResponse);
+                        self.onload(e.detail.response);
+                    }
+                }
+                var listener = window.addEventListener('hypermessage', handleResponse);
+            }
+            return self;
+        }
+
+
         var OTHER_ID = getParameterByName("site", document.location); //Get the server's id from url
-        if (!OTHER_ID){ //If no siteId, just go to main HyperHost
+        if (!OTHER_ID) { //If no siteId, just go to main HyperHost
             window.location = window.location.href.replace("client.html", "index.html");
         }
 
