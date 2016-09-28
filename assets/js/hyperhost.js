@@ -452,6 +452,7 @@ var HyperHost = (function () {
                 injectScripts(moduleListing, module.modules, function () {
                     //Wzrd will put everything on the window, so we need to move it to the modules
                     for (var i = 0; i < npmModuleList.length; i++) {
+                        console.log("> Loading module '"+npmModuleList[i]+ "' from npm...");
                         module.modules[npmModuleList[i]] = window[camelize(npmModuleList[i])];
                         console.log(window[npmModuleList[i]]);
                     }
