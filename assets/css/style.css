@@ -59,6 +59,7 @@ body > .navbar-collapse .logo .simple-text {
     border: #bababa 2px dashed;
     margin: 20px;
     height: 400px;
+    transition: background .3s;
 }
 
 .hyper-dropzone > div {
@@ -67,6 +68,23 @@ body > .navbar-collapse .logo .simple-text {
     position: relative;
     top: 50%;
     transform: translateY(-50%);
+}
+
+.hyper-dropzone-fullscreen {
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    bottom: 0px;
+    right: 0px;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #efffd5;
+    border: #87CB16 5px dashed;
+}
+
+.nopointer{
+    pointer-events: none;
 }
 
 .dragover {

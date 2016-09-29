@@ -33,19 +33,52 @@ app.directive('hyperhostDrop', function () {
                 e.preventDefault();
                 event.target.style.backgroundColor = '#efffd5';
                 event.target.style.borderColor = '#87CB16';
-            })
+            });
             elem.bind('dragleave', function (e) {
                 e.stopPropagation();
                 e.preventDefault();
                 e.originalEvent.target.style.backgroundColor = '';
                 e.originalEvent.target.style.borderColor = '#bababa';
-            })
+                scope.$apply();
+            });
             elem.bind('drop', function (e) {
                 e.stopPropagation();
                 e.preventDefault();
-                e.preventDefault();
+                scope.fullscreenDrop = "";
                 scope.startDeploying();
                 HyperHost.handleRawDropEvent(e.originalEvent.dataTransfer, scope);
+            });
+        }
+    };
+});
+
+app.directive('triggerFullscreenDropzone', function () {
+    return {
+        restrict: 'A',
+        scope: true,
+        link: function (scope, elem, attr, ctrl) {
+            var willRefire;
+            elem.bind('dragover', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                scope.fullscreenDrop = "hyper-dropzone-fullscreen";
+                scope.$apply();
+                willRefire=false;
+                fullscreenDrop = "hyper-dropzone-fullscreen nopointer"
+                setTimeout(function(){
+                    if (!willRefire){
+                        scope.fullscreenDrop = "";
+                        scope.$apply();
+                    }else{
+                       scope.fullscreenDrop = ""
+                    }
+                },200);
+                
+            });
+            elem.bind('dragleave', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                willRefire=true;
             });
         }
     };
@@ -87,7 +120,7 @@ app.controller('ctrl', function ($scope, $webSql) {
             name: "Database",
             template: "assets/templates/database.html",
             icon: "pe-7s-server"
-    },  {
+    }, {
             name: "Search",
             template: "assets/templates/search.html",
             icon: "pe-7s-search",
@@ -101,17 +134,19 @@ app.controller('ctrl', function ($scope, $webSql) {
             name: "Settings",
             template: "assets/templates/comingSoon.html",
             icon: "pe-7s-config"
-    },/*{
-            name: "Typograpgy (DELETE ME)",
-            template: "assets/templates/typography.html",
-            icon: "pe-7s-news-paper",
-            start: true
-    }, {
-            name: "Icons (DELETE ME)",
-            template: "assets/templates/icons.html",
-            icon: "pe-7s-science",
-            start: true
-    },*/ {
+    },
+        /*{
+                    name: "Typograpgy (DELETE ME)",
+                    template: "assets/templates/typography.html",
+                    icon: "pe-7s-news-paper",
+                    start: true
+            }, {
+                    name: "Icons (DELETE ME)",
+                    template: "assets/templates/icons.html",
+                    icon: "pe-7s-science",
+                    start: true
+            },*/
+        {
             name: "Deploy New Server",
             icon: "pe-7s-rocket"
         }
@@ -128,6 +163,8 @@ app.controller('ctrl', function ($scope, $webSql) {
     $scope.deploying = false;
     $scope.clientURL = "ERROR: No url could be resolved.";
     $scope.comingSoon = comingSoon;
+    $scope.fullscreenDrop = "";
+    $scope.muteDesc = "";
 
     $scope.startDeploying = function () {
         $scope.deploying = true;
@@ -310,97 +347,106 @@ app.controller('ctrl', function ($scope, $webSql) {
         name: 'user',
         dirty: true,
         rows: [],
-        temp : true
-    },{
-        name : 'transactions',
-        dirty : true,
+        temp: true
+    }, {
+        name: 'transactions',
+        dirty: true,
         rows: [],
-        temp : true
+        temp: true
     }];
     //--------- Example table ----------------
-    $scope.db.dropTable('user').then(function(){
-    $scope.db.createTable('user', {
-        "id": {
-            "type": "INTEGER",
-            "null": "NOT NULL", // default is "NULL" (if not defined)
-            "primary": true, // primary
-            "auto_increment": true // auto increment
-        },
-        "created": {
-            "type": "TIMESTAMP",
-            "null": "NOT NULL",
-            "default": "CURRENT_TIMESTAMP" // default value
-        },
-        "username": {
-            "type": "TEXT",
-            "null": "NOT NULL"
-        },
-        "password": {
-            "type": "TEXT",
-            "null": "NOT NULL"
-        },
-        "age": {
-            "type": "INTEGER"
-        }
-    }).then(function(){
-    $scope.db.insert('user', {
-        "username": 'Bill Gates',
-        "password": 'BuyApple123',
-        'age': 60
-    }).then(function(){
-    $scope.db.insert('user', {
-        "username": 'Tim Cook',
-        "password": 'BuyMicrosoft123',
-        'age': 55
-    }).then(function(){
-    $scope.db.insert('user', {
-        "username": 'Linus Torvalds',
-        "password": 'PenquinsRule9001',
-        'age': 46
-    }).then(
-        
-        
-    function(){
-        $scope.db.dropTable('transactions').then(function(){
-    $scope.db.createTable('transactions', {
-        "amount": {
-            "type": "FLOAT",
-            "null": "NOT NULL"
-        },
-        "created": {
-            "type": "TIMESTAMP",
-            "null": "NOT NULL",
-            "default": "CURRENT_TIMESTAMP" // default value
-        },
-        "sender": {
-            "type": "TEXT",
-            "null": "NOT NULL"
-        },
-        "recipient": {
-            "type": "TEXT",
-            "null": "NOT NULL"
-        }
-    }).then(function(){
-    $scope.db.insert('transactions', {
-        "amount": '400.54',
-        "sender": 'Bob',
-        'recipient': 'Adam' 
-    }).then(function(){
-    $scope.db.insert('transactions', {
-        "amount": '2.24',
-        "sender": 'George',
-        'recipient': 'Adam' 
-    }).then(function(){
-    $scope.db.insert('transactions', {
-        "amount": '5006.89',
-        "sender": 'Jim',
-        'recipient': 'Steve' 
-    }).then(function(){
-        updateDb();
-    })})})})})})})})})}); //XD
+    $scope.db.dropTable('user').then(function () {
+        $scope.db.createTable('user', {
+            "id": {
+                "type": "INTEGER",
+                "null": "NOT NULL", // default is "NULL" (if not defined)
+                "primary": true, // primary
+                "auto_increment": true // auto increment
+            },
+            "created": {
+                "type": "TIMESTAMP",
+                "null": "NOT NULL",
+                "default": "CURRENT_TIMESTAMP" // default value
+            },
+            "username": {
+                "type": "TEXT",
+                "null": "NOT NULL"
+            },
+            "password": {
+                "type": "TEXT",
+                "null": "NOT NULL"
+            },
+            "age": {
+                "type": "INTEGER"
+            }
+        }).then(function () {
+            $scope.db.insert('user', {
+                "username": 'Bill Gates',
+                "password": 'BuyApple123',
+                'age': 60
+            }).then(function () {
+                $scope.db.insert('user', {
+                    "username": 'Tim Cook',
+                    "password": 'BuyMicrosoft123',
+                    'age': 55
+                }).then(function () {
+                    $scope.db.insert('user', {
+                        "username": 'Linus Torvalds',
+                        "password": 'PenquinsRule9001',
+                        'age': 46
+                    }).then(
+
+
+                        function () {
+                            $scope.db.dropTable('transactions').then(function () {
+                                $scope.db.createTable('transactions', {
+                                    "amount": {
+                                        "type": "FLOAT",
+                                        "null": "NOT NULL"
+                                    },
+                                    "created": {
+                                        "type": "TIMESTAMP",
+                                        "null": "NOT NULL",
+                                        "default": "CURRENT_TIMESTAMP" // default value
+                                    },
+                                    "sender": {
+                                        "type": "TEXT",
+                                        "null": "NOT NULL"
+                                    },
+                                    "recipient": {
+                                        "type": "TEXT",
+                                        "null": "NOT NULL"
+                                    }
+                                }).then(function () {
+                                    $scope.db.insert('transactions', {
+                                        "amount": '400.54',
+                                        "sender": 'Bob',
+                                        'recipient': 'Adam'
+                                    }).then(function () {
+                                        $scope.db.insert('transactions', {
+                                            "amount": '2.24',
+                                            "sender": 'George',
+                                            'recipient': 'Adam'
+                                        }).then(function () {
+                                            $scope.db.insert('transactions', {
+                                                "amount": '5006.89',
+                                                "sender": 'Jim',
+                                                'recipient': 'Steve'
+                                            }).then(function () {
+                                                updateDb();
+                                            })
+                                        })
+                                    })
+                                })
+                            })
+                        })
+                })
+            })
+        })
+    }); //XD
     //-------------------
-    
-    
+
+
     $scope.executeQuery = function (query, values) {
         $scope.db.executeQuery(query, values).then(updateDb);
     }
