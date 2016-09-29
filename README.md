@@ -13,18 +13,6 @@ You can also host a Node server straight in your browser.
 Put your server's starting code in a file called **HH-server.js**, then drag n' drop into HyperHost like you would a static site.  
 Put any additional server code in files with the **HH-** extension. We can **require** these.
 Put any modules you need to be downloaded from NPM in a file called **package.json**
-```
-- folder-to-drop
-    - HH-server.js
-    - HH-custom.js  //An example of custom module (not required)
-    - package.json
-    - index.html
-    //Any other static resources to be served normally...
-    - css
-        - style.css
-    - js
-        - client-side-script.js
-```
 
 Here is an example HH-server.js
 ```javascript
