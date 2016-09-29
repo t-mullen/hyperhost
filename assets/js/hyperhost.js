@@ -141,6 +141,7 @@ var HyperHost = (function () {
         var fileCount = 0;
         var realFileCount = 0; //Just used for loading stats
         var traversalComplete = false;
+        var fileNetSize = 0; //Net size of files
         var foundIndex = false;
         var serverCode;
         var MY_ID; //Our PeerJS id
@@ -151,6 +152,7 @@ var HyperHost = (function () {
             if (item.isFile) {
                 // Get file
                 item.file(function (file) {
+                    fileNetSize+=file.size/ 1048576;
                     var reader = new FileReader();
                     fileCount++;
                     realFileCount++;
@@ -199,6 +201,10 @@ var HyperHost = (function () {
                             }
                             fileCount--;
                             if (fileCount === 0 && traversalComplete) {
+                                console.log(" > Net uploaded size: "+fileNetSize+ " MB");
+                                if (fileNetSize > 40){
+                                    console.warn("> WARNING: Large website, serving may crash the browser.");
+                                }
                                 preprocessFiles();
                             }
                         }, false);
