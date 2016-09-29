@@ -152,7 +152,7 @@ var HyperHost = (function () {
             if (item.isFile) {
                 // Get file
                 item.file(function (file) {
-                    fileNetSize+=file.size/ 1048576;
+                    fileNetSize += file.size / 1048576;
                     var reader = new FileReader();
                     fileCount++;
                     realFileCount++;
@@ -201,8 +201,8 @@ var HyperHost = (function () {
                             }
                             fileCount--;
                             if (fileCount === 0 && traversalComplete) {
-                                console.log(" > Net uploaded size: "+fileNetSize+ " MB");
-                                if (fileNetSize > 40){
+                                console.log(" > Net uploaded size: " + fileNetSize + " MB");
+                                if (fileNetSize > 40) {
                                     console.warn("> WARNING: Large website, serving may crash the browser.");
                                 }
                                 preprocessFiles();
@@ -397,18 +397,16 @@ var HyperHost = (function () {
                 console.error(err);
             });
 
+            function getView(path) {
+                for (var i = 0; i < rawViews.length; i++) {
+                    if (rawViews[i].path === path) {
+                        return rawViews[i];
+                    }
+                }
+            }
+
             peer.on('connection', function (conn) {
                 console.log("> Connected to peer!");
-                conn.on("open", function () {
-                    console.log("> Serving website to peer...");
-                    conn.send({
-                        type: "serve",
-                        content: {
-                            rawViews: rawViews,
-                            hasVirtualBackend: !!serverCode //Converts serverCode to boolean. Server code is NOT being sent
-                        }
-                    });
-                });
 
                 conn.on("close", function () {
                     console.log("> Peer closed the connection.");
@@ -426,9 +424,23 @@ var HyperHost = (function () {
                         });
                         window.dispatchEvent(event);
                     } else if (data.type === "ip") {
-                        console.log(data.ip); //Client can prevent sending IP with the ?i=true flag
-                        ajax("https://freegeoip.net/json/"+data.ip, function(geo){
-                            console.log(geo);
+                        ajax("https://freegeoip.net/json/" + data.ip, function (geo) {
+                            geo = JSON.parse(geo);
+                            var arr = [];
+                            for(var key in geo) {
+                                arr.push(geo[key]);
+                            }
+                            console.log("> "+arr.join(' '));
+                        });
+                    } else if (data.type === "view") {
+                        console.log("> Peer request "+data.path);
+                        conn.send({
+                                type: "view",
+                                path : data.path,
+                                content: {
+                                    view: getView(data.path),
+                                    hasVirtualBackend: !!serverCode //Converts serverCode to boolean. Server code is NOT being sent
+                                }
                         });
                     }
                 });

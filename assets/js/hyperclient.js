@@ -4,7 +4,6 @@ Thomas Mullen 2016
 */
 
 (function () {
-    var rawViews;
     var initialized = false;
     var dataLoaded = false;
 
@@ -20,7 +19,7 @@ Thomas Mullen 2016
         if (!results[2]) return '';
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
-    
+
     var ajax = function (url, successCallback, errorCallback) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
@@ -149,15 +148,30 @@ Thomas Mullen 2016
             reliable: true
         });
         conn.on("data", function (data) {
-            if (data.type === "serve") {
+            if (data.type === "view") {
                 console.log("Data received, rendering page...");
-                rawViews = data.content.rawViews;
+                var newView = data.content.view;
+                var path = data.path;
                 dataLoaded = true;
                 document.getElementById("HYPERHOST-viewframe").style.display = "inherit";
                 document.getElementById("HYPERHOST-dropzone").style.display = "none";
-                HYPERHOST_NAVIGATE("index.html");
-                if (!data.content.hasVirtualBackend) {   
-                    conn.close();
+
+
+                if (!!newView) {
+                    document.getElementById("HYPERHOST-viewframe").srcdoc = newView.body.replace('<html>', '<html><script>' + HyperRequestSrc + '</script>');
+
+                    history.pushState(path, path);
+                    console.log("Navigated to " + path);
+                    return;
+                } else {
+                    alert("HyperHost path '" + path + "' does not exist!");
+                    if (path === "index.html") {
+                        window.location.hash = "";
+                        document.getElementById("HYPERHOST-header").innerHTML = "HyperHost";
+                        document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Drop Website Root Folder Here to Instantly Host";
+                        document.getElementById("HYPERHOST-viewframe").style.display = "none";
+                        document.getElementById("HYPERHOST-dropzone").style.display = "inherit";
+                    }
                 }
             } else if (data.type === "response") {
                 sendHyperMessage({
@@ -166,12 +180,21 @@ Thomas Mullen 2016
                     id: data.id
                 });
             }
+        });
+        conn.on("open", function () {
             //Check for 'incognito mode' with ?i=true 
-            if (!getParameterByName("i", document.location)){ 
-                ajax("https://api.ipify.org?format=json", function(res){
-                    conn.send({'type':'ip', 'ip':JSON.parse(res).ip})
-                }), function(){}
+            /*
+            if (!getParameterByName("i", document.location)) {
+                ajax("https://api.ipify.org?format=json", function (res) {
+                        conn.send({
+                            'type': 'ip',
+                            'ip': JSON.parse(res).ip
+                        })
+                    }),
+                    function () {}
             }
+            */
+            HYPERHOST_NAVIGATE('index.html');
         });
         conn.on("close", function () {
             console.log("Connection to host closed.");
@@ -180,6 +203,7 @@ Thomas Mullen 2016
                 document.querySelector("#HYPERHOST-dropzone > div > a").style.display = "inherit";
             }
         });
+
     };
 
     //Send message to viewFrame document (across iframe)
@@ -211,26 +235,11 @@ Thomas Mullen 2016
 
     //Renders a different compiled HTML page in the viewframe
     function HYPERHOST_NAVIGATE(path, goingBack) {
-        for (var i = 0; i < rawViews.length; i++) { //Search for the path
-            for (var i = 0; i < rawViews.length; i++) { //Search for the path
-                if (rawViews[i].path === path) {           
-                    document.getElementById("HYPERHOST-viewframe").srcdoc = rawViews[i].body.replace('<html>', '<html><script>'+HyperRequestSrc+'</script>');
-
-                    if (!goingBack) history.pushState(path, path);
-                    console.log("Navigated to " + path);
-                    return;
-                }
-            }
-            alert("HyperHost path '" + path + "' does not exist!");
-            if (path === "index.html") {
-                window.location.hash = "";
-                document.getElementById("HYPERHOST-header").innerHTML = "HyperHost";
-                document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Drop Website Root Folder Here to Instantly Host";
-                document.getElementById("HYPERHOST-viewframe").style.display = "none";
-                document.getElementById("HYPERHOST-dropzone").style.display = "inherit";
-                initializeHost(true);
-            }
-        }
+        console.log("Requested " + path);
+        conn.send({
+            type: "view",
+            path: path
+        });
     }
 
     window.addEventListener('popstate', function (event) {
