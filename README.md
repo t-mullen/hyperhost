@@ -30,7 +30,7 @@ Here is an example HH-server.js
 ```javascript
 var hyperhost = require('hyperhost'); //This module lets us handle P2P connections
 var fs = require('browserify-fs'); //We can require ANY module that can be Browserified
-var custom = require('custom'); We can require our other server files.
+var custom = require('custom'); //We can require our other server files.
 var app = hyperhost.createApp(); //Creates our app
 
 //Handles 'get requests' to the '/' route
