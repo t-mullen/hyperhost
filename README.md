@@ -14,16 +14,16 @@ Put your server's starting code in a file called **HH-server.js**, then drag n' 
 Put any additional server code in files with the **HH-** extension. We can **require** these.
 Put any modules you need to be downloaded from NPM in a file called **package.json**
 ```
-folder-to-drop
-    HH-server.js
-    HH-custom.js  //An example of custom module (not required)
-    package.json
-    index.html
+- folder-to-drop
+    - HH-server.js
+    - HH-custom.js  //An example of custom module (not required)
+    - package.json
+    - index.html
     //Any other static resources to be served normally...
-    css
-        style.css
-    js
-        client-side-script.js
+    - css
+        - style.css
+    - js
+        - client-side-script.js
 ```
 
 Here is an example HH-server.js
@@ -67,7 +67,7 @@ Here is an example of **package.json**
 
 Calls to this virtual server can only be made from the site being hosted.  
 HyperHost defines the `HyperRequest` object, which is similar to the `XMLHttpRequest` object.
-```
+```javascript
 //Here is an example request
 var hyp = HyperRequest(); //Create a new HyperRequest
 hyp.onload = function (response) { //Set the callback
