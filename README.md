@@ -81,7 +81,7 @@ hyp.send({ //Send arbitrary data to server
 
 **Current Limitations:**  
 - The host must be running Chrome (no other browser supports folder drag n' drop). The client can be [any browser supporting WebRTC](http://caniuse.com/#feat=rtcpeerconnection).
-- Very large websites, **more than 80MB**, can freeze up when clients attempt to load them. (Serving needs to be staggered.)  
+- Very large pages, **more than 40MB**, can freeze up when clients attempt to load them. 
 - URLs pointing to hosted files inside **Javascript** files will not work. **External URLs will work.** (JS cannot easily be refactored, a partial fix might happen.)
 - Truly massive files cannot be hosted due to encoding being impossible.
 
