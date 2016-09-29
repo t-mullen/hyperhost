@@ -911,20 +911,6 @@ body > .navbar-collapse[data-color="purple"]:after {
   border-color: #9A9A9A;
 }
 
-.input-group .form-control:first-child,
-.input-group-addon:first-child,
-.input-group-btn:first-child > .dropdown-toggle,
-.input-group-btn:last-child > .btn:not(:last-child):not(.dropdown-toggle) {
-  border-right: 0 none;
-}
-
-.input-group .form-control:last-child,
-.input-group-addon:last-child,
-.input-group-btn:last-child > .dropdown-toggle,
-.input-group-btn:first-child > .btn:not(:first-child) {
-  border-left: 0 none;
-}
-
 .form-control[disabled], .form-control[readonly], fieldset[disabled] .form-control {
   background-color: #F5F5F5;
   color: #888888;

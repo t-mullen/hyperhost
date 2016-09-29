@@ -1,0 +1,77 @@
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="header">
+                <h4 class="title">Coming soon : {{pageName}}</h4>
+                <p class="category">This feature is not available yet, but stay tuned!</p>
+
+            </div>
+            <div class="content">
+                <p>{{comingSoon[pageName]}}</p>
+                <p ng-if="pageName==='Docs'"><a href="https://github.com/RationalCoding/HyperHost" target="_blank">https://github.com/RationalCoding/HyperHost</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <h4 class="title">Files (Preview)</h4>
+                <p class="category">Manage and edit your files without redeploying.</p>
+
+            </div>
+            <div class="content">
+                <div class="fileview">
+                    <script type="text/ng-template" id="nodes_renderer.html">
+                        <div class="fileitem tree-node tree-node-content">
+                            <a  ng-if="node.type==='folder'" class="btn btn-info btn-xs" data-nodrag ng-click="toggle(this)">
+                                <i n class="pe-7s-folder"></i>
+                            </a>
+                            <a ng-if="!(node.type==='folder')" class="btn btn-success btn-xs" data-nodrag ng-click="openInEditor(node.type, node.content)">
+                                <i class="pe-7s-file"></i>
+                            </a>
+                            {{node.title}}
+                                
+                            
+                            
+                            <a class="pull-right btn btn-danger btn-xs" data-nodrag ng-click="remove(this)">
+                                <i class="pe-7s-trash"></i>
+                            </a>
+                            <a ui-tree-handle class="pull-right btn btn-xs">
+                                <i class="pe-7s-menu"></i>
+                            </a>
+                           
+                            <a class="pull-right btn btn-primary btn-xs" ng-if="node.type==='folder'" data-nodrag ng-click="newSubItem(this)" style="margin-right: 8px;">
+                                <i class="pe-7s-plus"></i>
+                            </a>
+                        </div>
+                        <ol ui-tree-nodes="" ng-model="node.nodes" ng-class="{hidden: collapsed}">
+                            <li ng-repeat="node in node.nodes" ui-tree-node ng-include="'nodes_renderer.html'">
+                            </li>
+                        </ol>
+                    </script>
+
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div ui-tree id="tree-root">
+                                <ol ui-tree-nodes ng-model="data">
+                                    <li ng-repeat="node in data" ui-tree-node ng-include="'nodes_renderer.html'"></li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="content">
+                <ui-codemirror ui-codemirror-opts="editorOptions" ng-model="editorContents"></ui-codemirror>
+            </div>
+        </div>
+    </div>
+</div>

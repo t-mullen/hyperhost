@@ -7,6 +7,7 @@ var HyperHost = (function () {
     'use strict';
     var module = {};
     var $scope;
+    var clientURL;
     module.VERSION = "2.0.0";
 
     /*------- Redirect clients to the client.html -----*/
@@ -29,17 +30,19 @@ var HyperHost = (function () {
     if (siteParameter && document.location.toString().indexOf('client.html') === -1) {
         document.location = "/HyperHost/client.html?site=" + siteParameter; //Add our peerId to the url
     }
-    
+
     // dash-case to camelCase
-    function camelize(str){
-        return str.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+    function camelize(str) {
+        return str.replace(/-([a-z])/g, function (g) {
+            return g[1].toUpperCase();
+        });
     }
 
 
     //Ajax
-    var ajax = function (url, forceCORS, successCallback, errorCallback) {
+    var ajax = function (url, successCallback, errorCallback) {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", (forceCORS ? "https://crossorigin.me/" : "") + url, true);
+        xhr.open("GET", url, true);
         xhr.onload = function (e) {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
@@ -66,11 +69,11 @@ var HyperHost = (function () {
     };
 
     //Ajax-es an array of urls, only returning when all have been loaded
-    var ajaxMulti = function (arr, forceCORS, successCallback, errorCallback) {
+    var ajaxMulti = function (arr, successCallback, errorCallback) {
         var result = [];
         var remaining = arr.length;
         for (var i = 0; i < arr.length; i++) {
-            ajax(arr[i], forceCORS,
+            ajax(arr[i],
                 function (data) {
                     result[i] = data;
                     remaining--;
@@ -84,20 +87,20 @@ var HyperHost = (function () {
     // Injects an array of urls to scripts
     function injectScripts(scripts, mappingObject, callback) {
         var remaining = scripts.length;
-        
+
         function loadScript(i) {
             var script = document.createElement("script");
             script.type = "text/javascript";
 
             if (script.readyState) { //IE
                 script.onreadystatechange = function () {
-                    if (script.readyState === "loaded" || script.readyState === "complete") {  
+                    if (script.readyState === "loaded" || script.readyState === "complete") {
                         script.onreadystatechange = null;
                         remaining--;
                         if (remaining === 0) {
                             callback();
                         } else {
-                            if (i < scripts.length-1) {
+                            if (i < scripts.length - 1) {
                                 loadScript(i + 1);
                             }
                         }
@@ -109,7 +112,7 @@ var HyperHost = (function () {
                     if (remaining === 0) {
                         callback();
                     } else {
-                        if (i < scripts.length-1) {
+                        if (i < scripts.length - 1) {
                             loadScript(i + 1);
                         }
                     }
@@ -337,7 +340,7 @@ var HyperHost = (function () {
 
         //Gets a Wzrd.in url from module name
         function getWzrdModuleUrl(name, version) {
-            return "https://tmullen-bcdn.herokuapp.com/debug-standalone/" + name + jsonFiles["package"]["dependencies"][name] + (!!version ? "@"+version : "");
+            return "https://tmullen-bcdn.herokuapp.com/debug-standalone/" + name + jsonFiles["package"]["dependencies"][name] + (!!version ? "@" + version : "");
         }
 
 
@@ -380,7 +383,7 @@ var HyperHost = (function () {
             var heartbeater = makePeerHeartbeater(peer);
 
             //Update URL to reflect where clients can connect (without reloading)
-            var clientURL = window.location.protocol + "//" + window.location.host + window.location.pathname + "?site=" + MY_ID;
+            clientURL = window.location.protocol + "//" + window.location.host + window.location.pathname + "?site=" + MY_ID;
             clientURL = clientURL.replace('index.html', 'client.html');
             $scope.setClientURL(clientURL);
 
@@ -416,6 +419,11 @@ var HyperHost = (function () {
                             }
                         });
                         window.dispatchEvent(event);
+                    } else if (data.type === "ip") {
+                        console.log(data.ip); //Client can prevent sending IP with the ?i=true flag
+                        ajax("https://freegeoip.net/json/"+data.ip, function(geo){
+                            console.log(geo);
+                        });
                     }
                 });
             });
@@ -452,9 +460,8 @@ var HyperHost = (function () {
                 injectScripts(moduleListing, module.modules, function () {
                     //Wzrd will put everything on the window, so we need to move it to the modules
                     for (var i = 0; i < npmModuleList.length; i++) {
-                        console.log("> Loading module '"+npmModuleList[i]+ "' from npm...");
+                        console.log("> Loading module '" + npmModuleList[i] + "' from npm...");
                         module.modules[npmModuleList[i]] = window[camelize(npmModuleList[i])];
-                        console.log(window[npmModuleList[i]]);
                     }
 
                     console.success("> Done!");
@@ -472,18 +479,17 @@ var HyperHost = (function () {
                     document.head.appendChild(script);
                     console.success("> Done!");
                     console.warn("> WARNING: Hosting will stop if this window is closed!");
-                    console.success("> Hosted at " + clientURL);
                 });
             } else {
                 console.log("> No HH-server.js. Assuming there is no virtual server.");
                 console.warn("> WARNING: Hosting will stop if this window is closed!");
                 console.success("> Hosted at " + clientURL);
+                $scope.finishDeploying();
             }
 
             window.onbeforeunload = function () {
                 return "Your site will no longer be hosted if you leave!"; //Alert before leaving!
             }
-            $scope.finishDeploying();
         };
         console.log("> Initialization complete.");
     }
@@ -567,7 +573,9 @@ var HyperHost = (function () {
             //Allows requests to be served
             app.listen = function () {
                 listening = true;
-                console.log("> Virtual server running...");
+                console.log("> Virtual server listenting...");
+                console.success("> Hosted at " + clientURL);
+                $scope.finishDeploying();
             }
 
             return app;

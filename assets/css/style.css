@@ -114,12 +114,24 @@ body > .navbar-collapse .logo .simple-text {
     overflow: auto;
 }
 
+.card .ct-chart {
+    margin: 0;   
+}
+.fileview {
+    margin: 10px;
+    background-color: #F7F7F8;
+    padding: 10px;
+    border: black 1px solid;
+}
 
+.ct-chart {
+    text-align: center;
+}
 
-
-
-
-
+.ct-chart img {
+    height: 100%;
+    width: 100%;
+}
 
 
 

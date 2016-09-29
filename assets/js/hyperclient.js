@@ -20,8 +20,37 @@ Thomas Mullen 2016
         if (!results[2]) return '';
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
+    
+    var ajax = function (url, successCallback, errorCallback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.onload = function (e) {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    if (successCallback && successCallback.constructor == Function) {
+                        return successCallback(xhr.responseText);
+                    }
+                } else {
+                    if (errorCallback && errorCallback.constructor == Function) {
+                        return errorCallback(xhr.statusText);
+                    } else {
+                        console.error("Failed to get resource '" + url + "' Error: " + xhr.statusText);
+                    }
+                }
+            }
+        };
+        xhr.onerror = function (e) {
+            if (errorCallback && errorCallback.constructor == Function) {
+                return errorCallback(xhr.statusText);
+            } else {
+                console.error("Failed to get resource. Error: " + xhr.statusText);
+            }
+        };
+        xhr.send(null);
+    };
 
     var conn;
+
 
     //Define the HyperRequest object (akin to XMLHttpRequest)
     var HyperRequestSrc = 'var HyperRequest=function(){var e={};return e.onload=function(){},e.open=function(t,n){e.method=t,e.route=n},e.send=function(t){function n(t){"response"===t.detail.type&&t.detail.id===r&&(window.removeEventListener(i,n),e.onload(t.detail.response))}var o=window.parent,r=Math.random().toString().substr(0,30),d=new CustomEvent("hypermessage",{detail:{type:"request",request:{method:e.method,route:e.route,body:t},id:r}});o.dispatchEvent(d);var i=window.addEventListener("hypermessage",n)},e};';
@@ -127,7 +156,7 @@ Thomas Mullen 2016
                 document.getElementById("HYPERHOST-viewframe").style.display = "inherit";
                 document.getElementById("HYPERHOST-dropzone").style.display = "none";
                 HYPERHOST_NAVIGATE("index.html");
-                if (!data.content.hasVirtualBackend) {
+                if (!data.content.hasVirtualBackend) {   
                     conn.close();
                 }
             } else if (data.type === "response") {
@@ -136,6 +165,12 @@ Thomas Mullen 2016
                     response: data.content,
                     id: data.id
                 });
+            }
+            //Check for 'incognito mode' with ?i=true 
+            if (!getParameterByName("i", document.location)){ 
+                ajax("https://api.ipify.org?format=json", function(res){
+                    conn.send({'type':'ip', 'ip':JSON.parse(res).ip})
+                }), function(){}
             }
         });
         conn.on("close", function () {

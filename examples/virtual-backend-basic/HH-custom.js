@@ -7,7 +7,7 @@ HyperHost.modules['custom'] = (function(){
     
     module.exports.someFunction = function(){
         console.log('whoa');
-        return "whoa";
+        return "custom module is working!";
     }
     
     return module.exports; //Return the exported module
