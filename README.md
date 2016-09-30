@@ -73,11 +73,14 @@ hyp.send({ //Send arbitrary data to server
 ##Great for demos and hackathons!
 
 **Upcoming Features:**  
-- Distributed hosting - Allow clients to opt-in to helping you host the site.
+- Distributed hosting - Allow clients to opt-in to helping you host the site via a "branching-tree" mesh network.
 - Rehost option - Store processed site in localstorage for fast redeployment.
-- UI for hosts. See active connections, logs, change files without redeploying.
+- Features for hosts. See traffic statistics, change files without redeploying, notifications, themes, etc.
 - Zip uploading for cross-browser support.
 - No-WebRTC fallback for mobile and old browsers. 
+- Full SQLLite server with WebSQL.
+- Search other websites that are hosted. (Also, a service to expose websites to real search engines.)
+- Full documentation and better examples.
 
 **Current Limitations:**  
 - The host must be running Chrome (no other browser supports folder drag n' drop). The client can be [any browser supporting WebRTC](http://caniuse.com/#feat=rtcpeerconnection).
