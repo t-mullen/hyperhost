@@ -147,8 +147,66 @@ var HyperHost = (function () {
         var MY_ID; //Our PeerJS id
         var peer;
 
-        // Traverse a dropped director. TODO: ZIP support for browsers other than Chrome
-        function traverseFileTree(item, path, depth) {
+        var workingTree = {
+            nodes: []
+        }; //Aethetically keeps track of file structure 
+        // Updates working tree
+        function deepSetTree(tempObj, value, ancestors) { //Deep tree setting
+            for (var i = 0; i < ancestors.length; i++) {
+                var found = false;
+                for (var i2 = 0; i2 < tempObj.nodes.length; i2++) { //Locate the ancestors
+                    if (tempObj.nodes[i2].name === ancestors[i]) {
+                        tempObj = tempObj.nodes[i2];
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    tempObj.nodes.push({ //Create the ancestor if it doesn't exits
+                        name: ancestors[i],
+                        type: "folder",
+                        nodes: []
+                    });
+                    for (var i2 = 0; i2 < tempObj.nodes.length; i2++) { //Get the reference of the new object
+                        if (tempObj.nodes[i2].name === ancestors[i]) {
+                            tempObj = tempObj.nodes[i2];
+                            break;
+                        }
+                    }
+                }
+            }
+            value.nodes = [];
+            tempObj.nodes.push(value);
+        }
+
+        /*
+        {name: "name", type:"file", ancestors:[folder1", "folder2"]}
+        [
+            {
+                name:"folder1",
+                type:"folder",
+                nodes: [
+                    {
+                    name : "folder2",
+                    type : "folder",
+                    nodes : [
+                        {
+                            name : "name",
+                            type : "file",
+                        }
+                    ]
+                    }
+                ]
+             }
+        ]
+        
+        */
+
+        // Traverse a dropped directory. TODO: ZIP support for browsers other than Chrome
+        function traverseFileTree(item, path, depth, ancestors) {
+            if (item.name[0] === ".") {
+                return; //Ignore hidden files
+            }
             if (item.isFile) {
                 // Get file
                 item.file(function (file) {
@@ -160,6 +218,7 @@ var HyperHost = (function () {
                     ext = ext[ext.length - 1].toLowerCase();
                     if (["html", "css", "json"].indexOf(ext) !== -1) { //These files need to be read as text, so we can replace URLs within them or use them immediately
                         reader.addEventListener("load", function () {
+                            deepSetTree(workingTree, {type : ext, name : item.name, content: reader.result}, ancestors);
                             if (ext === "json") {
                                 jsonFiles[path + item.name.split(".")[0]] = JSON.parse(reader.result); //JSON files are reserved for the server. If you need them in client, use a virtual backend to serve them
                             } else {
@@ -179,49 +238,70 @@ var HyperHost = (function () {
                             }
                         }, false);
                         reader.readAsText(file); //Read these as text
-                    } else {
+                    } else if (["js", "txt", "md", "py", "java"].indexOf(ext) !== -1) { //Read JS as text, but save as base64
                         reader.addEventListener("load", function () {
+                            var base64 = "data:text/javascript;base64," + btoa(reader.result);
+                            deepSetTree(workingTree, {type:ext, name:item.name, content:reader.result}, ancestors);
+
                             if (item.name === "HH-server.js") {
                                 //Is virtual backend code
-                                serverCode = reader.result;
+                                serverCode = base64;
                             } else if (item.name.substring(0, 3) === "HH-") {
                                 //Is a module for the virtual backend   
                                 var name = item.name.substring(3).slice(0, -3);
                                 moduleListing.push(name);
-                                module.modules[name] = reader.result; //Store url in place of the module (prevent .js extension with meaningless query)
+                                module.modules[name] = base64; //Store url in place of the module (prevent .js extension with meaningless query)
                             } else {
-                                var isFont = ["eot", "woff", "woff2", "ttf", "svg", "sfnt", "otf"].indexOf(ext) !== -1;
                                 assets.push({
                                     "old": path + item.name,
-                                    "new": reader.result,
+                                    "new": base64,
                                     "extension": ext,
                                     "itemName": item.name,
-                                    "isFont": isFont
+                                    "isFont": false
                                 });
                             }
+
                             fileCount--;
                             if (fileCount === 0 && traversalComplete) {
-                                console.log(" > Net uploaded size: " + fileNetSize + " MB");
-                                if (fileNetSize > 40) {
-                                    console.warn("> WARNING: Large website, serving may crash the browser.");
-                                }
+                                preprocessFiles();
+                            }
+                        });
+                        reader.readAsText(file);
+                    } else {
+                        reader.addEventListener("load", function () {
+                            deepSetTree(workingTree, {type:ext, name:item.name, content:"Cannot display image type \""+ext+"\""}, ancestors);
+                            
+                            var isFont = ["eot", "woff", "woff2", "ttf", "svg", "sfnt", "otf"].indexOf(ext) !== -1;
+                            assets.push({
+                                "old": path + item.name,
+                                "new": reader.result,
+                                "extension": ext,
+                                "itemName": item.name,
+                                "isFont": isFont
+                            });
+
+                            fileCount--;
+                            if (fileCount === 0 && traversalComplete) {
                                 preprocessFiles();
                             }
                         }, false);
                         reader.readAsDataURL(file); //URL encode these
                     }
+
                 }, function (err) {
                     console.error(err);
                 });
             } else if (item.isDirectory) {
-                if (item.name[0] === ".") {
-                    return; //Ignore hidden files
-                }
                 // Get folder contents
+                deepSetTree(workingTree, {type:'folder', name:item.name, content:null}, ancestors); //Keeps track of structure
+                
+                
                 var dirReader = item.createReader();
                 dirReader.readEntries(function (entries) {
                     for (var i = 0; i < entries.length; i++) {
-                        traverseFileTree(entries[i], depth === 0 ? "" : path + item.name + "/", depth + 1);
+                        var newAns = ancestors.slice(0);
+                        newAns.push(item.name);
+                        traverseFileTree(entries[i], depth === 0 ? "" : path + item.name + "/", depth + 1, newAns);
                     }
                 });
             }
@@ -232,6 +312,11 @@ var HyperHost = (function () {
         }
 
         function preprocessFiles() {
+            console.log(" > Net uploaded size: " + fileNetSize + " MB");
+            if (fileNetSize > 40) {
+                console.warn("> WARNING: Large website, serving may crash the browser.");
+            }
+
             console.log("> Preparing to encode " + rawViews.length + " assets...");
             console.success("> Done!");
             console.log("> Encoding view elements...");
@@ -319,10 +404,11 @@ var HyperHost = (function () {
             for (var i = 0; i < items.length; i++) {
                 var item = items[i].webkitGetAsEntry();
                 if (item) {
-                    traverseFileTree(item, "", 0);
+                    traverseFileTree(item, "", 0, []);
                 }
             }
             traversalComplete = true;
+            scope.updateFileTree(workingTree.nodes);
             console.success("> Done!");
         }
 
@@ -337,7 +423,7 @@ var HyperHost = (function () {
             console.log("> Loading your files...");
 
             for (var i = 0; i < files.length; i++) {
-                traverseFileTree(files[i]);
+                traverseFileTree(files[i], "", 0, []);
             }
 
             traversalComplete = true;
@@ -427,20 +513,20 @@ var HyperHost = (function () {
                         ajax("https://freegeoip.net/json/" + data.ip, function (geo) {
                             geo = JSON.parse(geo);
                             var arr = [];
-                            for(var key in geo) {
+                            for (var key in geo) {
                                 arr.push(geo[key]);
                             }
-                            console.log("> "+arr.join(' '));
+                            console.log("> " + arr.join(' '));
                         });
                     } else if (data.type === "view") {
-                        console.log("> Peer request "+data.path);
+                        console.log("> Peer request " + data.path);
                         conn.send({
-                                type: "view",
-                                path : data.path,
-                                content: {
-                                    view: getView(data.path),
-                                    hasVirtualBackend: !!serverCode //Converts serverCode to boolean. Server code is NOT being sent
-                                }
+                            type: "view",
+                            path: data.path,
+                            content: {
+                                view: getView(data.path),
+                                hasVirtualBackend: !!serverCode //Converts serverCode to boolean. Server code is NOT being sent
+                            }
                         });
                     }
                 });

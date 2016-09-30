@@ -103,7 +103,7 @@ body > .navbar-collapse .logo .simple-text {
     color: black !important;
     background: #d8d8d8;
     border-radius: .4em;
-    transition: background .3s;
+    transition: background .2s;
 }
 
 .file-upload__label:hover {

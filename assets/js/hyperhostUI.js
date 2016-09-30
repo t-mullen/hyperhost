@@ -203,19 +203,19 @@ app.controller('ctrl', function ($scope, $webSql) {
 
         console.log = function (msg) {
             console.oldlog(msg);
-            serverConsole(msg, 'text-info');
+            serverConsole(msg.substring(0, 500), 'text-info');
         }
         console.success = function (msg) {
             console.oldlog(msg);
-            serverConsole(msg, 'text-success');
+            serverConsole(msg.substring(0, 500), 'text-success');
         }
         console.warn = function (msg) {
             console.oldwarn(msg);
-            serverConsole(msg, 'text-warning');
+            serverConsole(msg.substring(0, 500), 'text-warning');
         }
         console.error = function (msg) {
             console.olderror(msg);
-            serverConsole(msg, 'text-danger');
+            serverConsole(msg.substring(0, 500), 'text-danger');
         }
     } else {
         console.success = function (msg) {
@@ -237,49 +237,6 @@ app.controller('ctrl', function ($scope, $webSql) {
         return name === $scope.pageName ? "active" : "";
     }
 
-    $scope.addFiles = function (files) {
-        $scope.deploying = true;
-        HyperHost.handleFiles(files, $scope);
-    }
-
-    $scope.files = [
-        {
-            title: "assets",
-            icon: "pe-7s-folder",
-            items: [
-                {
-                    title: "css",
-                    icon: "pe-7s-folder",
-                    items: [
-                       "style.css"
-                   ]
-               },
-                {
-                    title: "js",
-                    icon: "pe-7s-folder",
-                    items: [
-                        {
-                            title: "script.js",
-                            icon: "pe-7s-file"
-                       },
-                        {
-                            title: "myClientModule.js",
-                            icon: "pe-7s-file"
-                       }
-                   ]
-               }
-           ]
-        },
-        {
-            title: "index.html",
-            icon: "pe-7s-file"
-        },
-        {
-            title: "HH-server.js",
-            icon: "pe-7s-file"
-        }
-    ]
-
     $scope.remove = function (scope) {
         scope.remove();
     };
@@ -287,36 +244,6 @@ app.controller('ctrl', function ($scope, $webSql) {
     $scope.toggle = function (scope) {
         scope.toggle();
     };
-
-    $scope.editorOptions = {
-        value: "An Open-Source code editor for your files!",
-        mode: {
-            name: "javascript",
-            globalVars: true
-        }
-    }
-
-    //Extension to editor mime type
-    function extToMime(a) {
-        var map = {
-            'js': 'javascript',
-            'html': 'htmlmixed',
-            'css': 'css',
-            'json': 'javascript',
-        }
-
-        if (Object.keys(map).indexOf(a) !== -1) {
-            return map[a];
-        } else {
-            return a;
-        }
-    }
-
-    $scope.editorContents = 'Click on a green file button to open that file here!';
-    $scope.openInEditor = function (type, content) {
-        $scope.editorOptions.mode.name = extToMime(type)
-        $scope.editorContents = content;
-    }
 
     $scope.moveLastToTheBeginning = function () {
         var a = $scope.data.pop();
@@ -464,20 +391,61 @@ app.controller('ctrl', function ($scope, $webSql) {
             }
         }
     }
+    
+    $scope.editorOptions = {
+        value: "An Open-Source code editor for your files!",
+        mode: {
+            name: "javascript",
+            globalVars: true
+        }
+    }
 
-    $scope.data = [{
+    //Extension to editor mime type
+    function extToMime(a) {
+        var map = {
+            'js': 'javascript',
+            'html': 'htmlmixed',
+            'css': 'css',
+            'json': 'javascript',
+        }
+
+        if (Object.keys(map).indexOf(a) !== -1) {
+            return map[a];
+        } else {
+            return a;
+        }
+    }
+
+    $scope.editorContents = 'Click on a green file button to open that file here!';
+    $scope.openInEditor = function (type, content) {
+        $scope.editorOptions.mode.name = extToMime(type)
+        $scope.editorContents = content; //TODO : Fix or replace ui-codemirror
+    }
+    
+    $scope.addFiles = function (files) {
+        $scope.deploying = true;
+        HyperHost.handleFiles(files, $scope);
+    }
+    
+    $scope.updateFileTree = function(fileTree){
+        console.log(fileTree);
+        $scope.fileTree = fileTree;
+        $scope.$apply();
+    }
+
+    $scope.fileTree = [{
         'id': 1,
-        'title': 'assets',
+        'name': 'assets',
         'type': 'folder',
         'nodes': [
             {
                 'id': 11,
-                'title': 'js',
+                'name': 'js',
                 'type': 'folder',
                 'nodes': [
                     {
                         'id': 111,
-                        'title': 'script.js',
+                        'name': 'script.js',
                         'type': 'js',
                         'nodes': [],
                         'content': "var a = 1;\nfunction myFunc(){\n\treturn \"WOW syntax hightling! Thanks CodeMirror!\"\n}"
@@ -486,7 +454,7 @@ app.controller('ctrl', function ($scope, $webSql) {
           },
             {
                 'id': 12,
-                'title': 'style.css',
+                'name': 'style.css',
                 'type': 'css',
                 'nodes': [],
                 'content': '.myStyle\n\t\t{color:blue;}\n}'
@@ -494,21 +462,21 @@ app.controller('ctrl', function ($scope, $webSql) {
         ]
       }, {
         'id': 2,
-        'title': 'modules',
+        'name': 'modules',
         'type': 'folder',
         'nodrop': true, // An arbitrary property to check in custom template for nodrop-enabled
         'nodes': [
             {
                 'id': 21,
                 'type': 'js',
-                'title': 'HH-custom.js',
+                'name': 'HH-custom.js',
                 'nodes': [],
                 'content': '//No content here yet. Gotta build this custom module!'
           },
             {
                 'id': 22,
                 'type': 'js',
-                'title': 'HH-math.js',
+                'name': 'HH-math.js',
                 'content': 'var mathyThings = true;',
                 'nodes': []
           }
@@ -516,13 +484,13 @@ app.controller('ctrl', function ($scope, $webSql) {
       }, {
         'id': 3,
         'type': 'js',
-        'title': 'HH-server.js',
+        'name': 'HH-server.js',
         'content': 'var hyperhost = require("hyperhost");\n//TODO: Build an awesome P2P server!',
         'nodes': []
       }, {
         'id': 3,
         'type': 'html',
-        'title': 'index.html',
+        'name': 'index.html',
         'nodes': [],
         'content': '<html>\n\t<body>\n\t\t<h1>Whoa!</h1>\n\t</body>\n</html>'
       }];
