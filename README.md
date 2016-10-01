@@ -1,14 +1,12 @@
 # HyperHost
-##A WebRTC-powered Node server in Your Browser
+##Instant Drag n' Drop Hostin
 
-HyperHost makes hosting completely free by running a virtual Node server in your browser. Connections are made with Peer-to-Peer WebRTC.
-
-To host a static website go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the folder of any website containing at least a **index.html**. A link to your hosted site will appear after a few seconds. Then, anyone with a WebRTC enabled browser can see it from anywhere. That's it. No server hosting your files, no charges, just direct hosting.
+Go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the folder of any website containing at least a **index.html**. A link to your hosted site will appear after a few seconds. Then, anyone with a WebRTC enabled browser can see it from anywhere. That's it. No server hosting your files, no charges, just direct hosting.
 
 Your site will be available so long as your browser window is open. All resources are served via a encrypted P2P connection.
 
-##Go Beyond Static Websites
-You can also host a Node server straight in your browser.
+##A WebRTC-powered Node server in Your Browser
+You can also run a virtual Node server straight in your browser.
 
 Put your server's starting code in a file called **HH-server.js**, then drag n' drop into HyperHost like you would a static site.  
 Put any additional server code in files with the **HH-** extension. We can **require** these.
