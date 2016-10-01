@@ -1,5 +1,5 @@
 # HyperHost
-##A P2P-power Node server in Your Browser
+##A WebRTC-powered Node server in Your Browser
 
 HyperHost makes hosting completely free by running a virtual Node server in your browser. Connections are made with Peer-to-Peer WebRTC.
 
