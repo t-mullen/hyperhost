@@ -1,9 +1,9 @@
 # HyperHost
 ##Instant Drag n' Drop Hosting
 
-Go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the folder of any website containing at least a **index.html**. A link to your hosted site will appear after a few seconds. Then, anyone with a WebRTC enabled browser can see it from anywhere. That's it. No server hosting your files, no charges, just direct hosting.
+Go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the folder of any website containing at least an **index.html**. A link to your hosted site will appear after a few seconds. Then, anyone with a WebRTC enabled browser can see it from anywhere. That's it. No server hosting your files, no charges, just direct hosting.
 
-Your site will be available so long as your browser window is open. All resources are served via a encrypted P2P connection.
+Your site will be available so long as your browser window is open. All resources are served via an encrypted P2P connection.
 
 ##A WebRTC-powered Node server in Your Browser
 You can also run a virtual Node server straight in your browser.
