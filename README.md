@@ -89,4 +89,4 @@ hyp.send({ //Send arbitrary data to server
 **Notes:**  
 You can host the files in this repo anywhere (even on a file:// domain!) if you don't want to use Github's servers for the initial resources. You can also use any PeerJS signalling server.
 
-## [MULTIHACK](https://rationalcoding.github.io/multihack) is a web-based IDE that uses HyperHost to deploy you project even faster!
+### [MULTIHACK](https://rationalcoding.github.io/multihack) is a web-based IDE that uses HyperHost to deploy you project even faster!
