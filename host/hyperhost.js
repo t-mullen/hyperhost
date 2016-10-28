@@ -266,7 +266,7 @@ var HyperHost = (function (Util) {
                         }
                     }
                 } else if (["js", "txt", "md", "py", "java"].indexOf(ext) !== -1) { //Read JS as text, but save as base64
-                    var base64 = "data:text/javascript;base64," + btoa(item.content);
+                    var base64 = "data:text/javascript;base64," + btoa(unescape(encodeURIComponent(unescape(encodeURIComponent(item.content)))));
                     Util.deepSetTree(workingTree, {
                         type: ext,
                         name: item.name,
@@ -307,7 +307,7 @@ var HyperHost = (function (Util) {
                         "isFont": false
                     });  
                 }else {
-                    var base64 = "data:text/javascript;base64," + btoa(item.content);
+                    var base64 = "data:text/javascript;base64," + btoa(unescape(encodeURIComponent(item.content)));
                     Util.deepSetTree(workingTree, {
                         type: ext,
                         name: item.name,
