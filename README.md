@@ -46,17 +46,3 @@ var myTree = [
     }
 ]
 ```
-
-Here are some examples of how to create these trees.
-
-###From ZIP
-Using JSZip:
-```javascript
-
-```
-
-
-
-
-
-```
