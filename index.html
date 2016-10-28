@@ -1,205 +1,21 @@
-<!doctype html>
-<html lang="en">
+<html>
 
-<head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/png" href="favicon.ico">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
-    <title>HyperHost</title>
-
-    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
-    <meta name="viewport" content="width=device-width" />
-
-    <script>
-        /*------- Redirect clients to the client.html -----*/
-        function getParameterByName(name, url) {
-            if (!url) {
-                url = window.location.href;
-            }
-            name = name.replace(/[\[\]]/g, "\\$&");
-            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-                results = regex.exec(url);
-            if (!results) {
-                return null;
-            } else if (!results[2]) {
-                return '';
-            }
-            return decodeURIComponent(results[2].replace(/\+/g, " "));
+<script src="peer.js"></script>
+<script src="hyperhost.js"></script>
+<script>
+    HyperHost.consumeTree([
+        {
+            name : "index.html",
+            content : "Hello World"
         }
-
-        var siteParameter = getParameterByName("site", document.location);
-        if (siteParameter && document.location.toString().indexOf('client.html') === -1) {
-            document.location = "/HyperHost/client.html?site=" + siteParameter; //Add our peerId to the url
-        }
-    </script>
+    ]);
+</script>
 
 
-    <!-- Bootstrap core CSS     -->
-    <link href="assets/css/bootstrap.min.css" rel="stylesheet" />
-
-    <!-- Animation library for notifications   -->
-    <link href="assets/css/animate.min.css" rel="stylesheet" />
-
-    <!-- Charts -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.min.js" />
-
-    <!--  Light Bootstrap Table core CSS    -->
-    <link href="assets/css/light-bootstrap-dashboard.css" rel="stylesheet" />
-
-    <!-- File trees -->
-    <link rel="stylesheet" href="assets/css/angular-ui-tree.min.css">
-    <link rel="stylesheet" href="assets/css/files.css">
-
-    <!-- Editor -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/codemirror.min.css">
 
 
-    <!-- Vector maps styling -->
-    <link rel="stylesheet" src="assets/css/jquery-jvectormap-2.0.3.css">
 
-    <!--     Fonts and icons     -->
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
-    <link href='https://fonts.googleapis.com/css?family=Roboto:400,700,300' rel='stylesheet' type='text/css'>
-    <link href="assets/css/pe-icon-7-stroke.css" rel="stylesheet" />
-
-    <!--  Custom HyperHost CSS     -->
-    <link href="assets/css/style.css" rel="stylesheet" />
-
-    <!-- Vector Maps-->
-    <script src="assets/js/jquery-1.10.2.js" type="text/javascript"></script>
-    <script src="assets/js/jquery-jvectormap-2.0.3.min.js"></script>
-    <script src="assets/js/jquery-jvectormap-world-mill.js"></script>
-</head>
-
-<body ng-app="app" ng-controller="ctrl" trigger-fullscreen-dropzone ng-class="muteDescendents">
-
-    <div class="wrapper">
-        <div class="sidebar" data-color=blue>
-
-            <!--
-
-        Tip 1: you can change the color of the sidebar using: data-color="blue | azure | green | orange | red | purple"
-        Tip 2: you can also add an image using data-image tag
-
-    -->
-
-            <div class="sidebar-wrapper" id="sidebar">
-                <div class="logo">
-                    <a class="simple-text">
-                    HyperHost
-                </a>
-                </div>
-
-                <ul class="nav">
-                    <li ng-click="changePage(page.name)" ng-repeat="page in pages" ng-class="activePageClass(page.name, page.start)">
-                        <a>
-                            <i class="{{page.icon}}"></i>
-                            <p ng-cloak>{{page.name}}</p>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="main-panel">
-            <nav class="navbar navbar-default navbar-fixed" id="v-nav">
-                <div class="container-fluid">
-                    <div class="navbar-header">
-                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navigation-example-2">
-                            <span class="sr-only">Toggle navigation</span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                        </button>
-                        <a class="navbar-brand" href="#">{{ pageName }}</a>
-                    </div>
-                    <div class="collapse navbar-collapse">
-                        <ul class="nav navbar-nav navbar-right">
-                            <li>
-                                <a ng-if="deployed" target="_blank" href="{{clientURL}}" class="text-success">
-                               View Site
-                            </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
-
-
-            <div class="content">
-                <div ng-repeat="page in pages" class="container-fluid" ng-if="page.name===pageName" ng-include="page.template"></div>
-            </div>
-
-
-            <footer class="footer">
-                <div class="container-fluid">
-                    <nav class="pull-left">
-                        <ul>
-                            <li>
-                                <a href="https://rationalcoding.me" target="_blank">
-                                My Website
-                            </a>
-                            </li>
-                            <li>
-                                <a href="https://rationalcoding.wordpress.com" target="_blank">
-                               Blog
-                            </a>
-                            </li>
-                        </ul>
-                    </nav>
-                    <p class="copyright pull-right">
-                        By <a href="https://rationalcoding.me" target="_blank">RationalCoding</a>
-                    </p>
-                </div>
-            </footer>
-
-        </div>
-    </div>
-
-
-</body>
-<!--  Charts and maps Plugin -->
-<script src="assets/js/jquery-jvectormap-2.0.3.min.js"></script>
-<script src="assets/js/jquery-jvectormap-world-mill.js"></script>
-
-
-<!-- Angular -->
-<script src="assets/js/angular.min.js" type="text/javascript"></script>
-<script src="assets/js/ng-file-upload.min.js" type="text/javascript"></script>
-<script src="assets/js/angular-ui-tree.min.js"></script>
-<script src="assets/js/ui-codemirror-badfix.js"></script>
-<script src="assets/js/angular-websql.min.js"></script>
-
-<!--   Core JS Files   -->
-<script src="assets/js/bootstrap.min.js" type="text/javascript"></script>
-
-<!--  Checkbox, Radio & Switch Plugins -->
-<script src="assets/js/bootstrap-checkbox-radio-switch.js" type="text/javascript"></script>
-
-
-<!-- Open source editor CodeMirror -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/codemirror.js"></script>
-<<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/mode/htmlmixed/htmlmixed.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/mode/css/css.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/mode/javascript/javascript.min.js"></script>
-<!-- TODO: CodeMirror breaks when files change -->
-
-<!--  Notifications Plugin    -->
-<script src="assets/js/bootstrap-notify.js" type="text/javascript"></script>
-
-<!-- Light Bootstrap Table Core -->
-<script src="assets/js/light-bootstrap-dashboard.js" type="text/javascript"></script>
-
-<!-- Detect Browser -->
-<script src="assets/js/detect.min.js" type="text/javascript"></script>
-
-<!-- Peer.js WebRTC -->
-<script src="assets/js/peer.js"></script>
-
-<!-- HyperHost Engine and UI -->
-<script src="assets/js/hyperhost.js" type="text/javascript"></script>
-<script src="assets/js/hyperhostUI.js" type="text/javascript"></script>
 
 
 </html>

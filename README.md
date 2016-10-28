@@ -1,90 +1,62 @@
-# HyperHost
-##Webservers, without servers.
+#HyperHost Core
 
-HyperHost makes hosting completely free by running a virtual Node server in your browser. Connections are made with Peer-to-Peer WebRTC.
+This is the core module (without the UI). Only dependency is PeerJS.
 
-To host a static website go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the folder of any website containing at least a **index.html**. A link to your hosted site will appear after a few seconds. Then, anyone with a WebRTC enabled browser can see it from anywhere. That's it. No server hosting your files, no charges, just direct hosting.
+###API
+**hyperhost.js** places a `HyperHost` variable on the window object.  
 
-Your site will be available so long as your browser window is open. All resources are served via a encrypted P2P connection.
-
-##Go Beyond Static Websites
-You can also host a Node server straight in your browser.
-
-Put your server's starting code in a file called **HH-server.js**, then drag n' drop into HyperHost like you would a static site.  
-Put any additional server code in files with the **HH-** extension. We can **require** these.
-Put any modules you need to be downloaded from NPM in a file called **package.json**
-
-Here is an example HH-server.js
+You can use the defaults, or specify your own support servers.
 ```javascript
-var hyperhost = require('hyperhost'); //This module lets us handle P2P connections
-var fs = require('browserify-fs'); //We can require ANY module that can be Browserified
-var custom = require('custom'); //We can require our other server files.
-var app = hyperhost.createApp(); //Creates our app
-
-//Handles 'get requests' to the '/' route
-app.get('/', function (req, res) {
-    //We can use our modules
-    
-    custom.someFunction();
-    fs.mkdir('/home');
-    fs.writeFile('/home/hello-world.txt', "Virtual file system? Yes please!");
-    
-    //We can send any data over the connection (including files, blobs, anything)
-    res.send({
-        exampleData: "hello!",
-        moreData: [1, 4, 2, 3],
-        more: {
-            anyData: {}
-        }
-    });
-});
-
-app.listen(); //This starts the virtual backend
-```
-
-Here is an example of **package.json**
-```javascript
-{
-  "name": "MyNodeApp",
-  "dependencies": { 
-    "browserify-fs": ">1.0.0", //These are modules that will be pulled from NPM
-    "crypto-browserify" : "", //Don't specify a version number for the latest version
-  }
-}
-```
-
-Calls to this virtual server can only be made from the site being hosted.  
-HyperHost defines the `HyperRequest` object, which is similar to the `XMLHttpRequest` object.
-```javascript
-//Here is an example request
-var hyp = HyperRequest(); //Create a new HyperRequest
-hyp.onload = function (response) { //Set the callback
-    console.log(response);
-    document.getElementById("output").innerHTML = JSON.stringify(response);
-}
-hyp.open("GET", "/"); //Set the method and route
-hyp.send({ //Send arbitrary data to server
-    message: "hello",
-    moreData: [12, 42, 21, ],
-    evenMore: {}
+HyperHost.options({
+    clientUrl : "https://rationalcoding.github.io/HyperHost/client.html", // URL to the page hosting client.js
+    wzrdHost : "tmullen-bcdn.herokuapp.com", // Hostname of the WZRD.in instance (for fetching NPM modules)
+    peerServer : {
+                    host: "peerjs-server-tmullen.mybluemix.net", //Hostname of PeerJS instance
+                    port: 443,          //Port to use
+                    path: "/server",    //Path to PeerJS endpoint
+                    secure: true        
+                }  
 });
 ```
 
-##Great for demos and hackathons!
+The below method processes a structured tree and immediately hosts it. Subsequest calls will overwrite the tree host the new content at the same URL.  
+The callback will be fired when a client URL is available.  
+```javascript
+HyperHost.consumeTree(myTree, callback);
+```
+To put files into HyperHost, you will need to provide a structured tree of this format.  
+```javascript
+var myTree = [
+    {
+        name : "index.html", // Name of file
+        content : "<html></html>"   // Content of file, as a string
+    },
+    {
+        name : "myFolder",  // Name of folder
+        nodes : [
+            {
+                name: "subFolder",
+                nodes : []
+            },
+            {
+                name : "nestedFile.js",
+                content : "var a = 1"
+            }
+        ]
+    }
+]
+```
 
-**Upcoming Features:**  
-- Distributed hosting - Allow clients to opt-in to helping you host the site.
-- Rehost option - Store processed site in localstorage for fast redeployment.
-- UI for hosts. See active connections, logs, change files without redeploying.
-- Zip uploading for cross-browser support.
-- No-WebRTC fallback for mobile and old browsers. 
+Here are some examples of how to create these trees.
 
-**Current Limitations:**  
-- The host must be running Chrome (no other browser supports folder drag n' drop). The client can be [any browser supporting WebRTC](http://caniuse.com/#feat=rtcpeerconnection).
-- Very large pages, **more than 40MB**, can freeze up when clients attempt to load them. 
-- URLs pointing to hosted files inside **Javascript** files will not work. **External URLs will work.** (JS cannot easily be refactored, a partial fix might happen.)
-- Truly massive files cannot be hosted due to encoding being impossible.
+###From ZIP
+Using JSZip:
+```javascript
 
-**Notes:**  
-You can host the files in this repo anywhere (even on a file:// domain!) if you don't want to use Github's servers for the initial resources. You can also use any PeerJS signalling server.
+```
 
+
+
+
+
+```
