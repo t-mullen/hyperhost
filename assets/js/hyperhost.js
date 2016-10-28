@@ -240,7 +240,7 @@ var HyperHost = (function () {
                         reader.readAsText(file); //Read these as text
                     } else if (["js", "txt", "md", "py", "java"].indexOf(ext) !== -1) { //Read JS as text, but save as base64
                         reader.addEventListener("load", function () {
-                            var base64 = "data:text/javascript;base64," + btoa(reader.result);
+                            var base64 = "data:text/javascript;base64," + btoa(unescape(encodeURIComponent(reader.result)));
                             deepSetTree(workingTree, {type:ext, name:item.name, content:reader.result}, ancestors);
 
                             if (item.name === "HH-server.js") {
