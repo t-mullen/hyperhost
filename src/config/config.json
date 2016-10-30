@@ -1,0 +1,23 @@
+{
+    paths : {
+        client : "https://rationalcoding.github.io/HyperHost/client.html?site=",
+        wzrd : "https://tmullen-bcdn.herokuapp.com/debug-standalone/",
+        crossOriginProxy : "https://crossorigin.me/"
+    },
+    extensions : {
+        text : ["js", "txt", "md", "py", "java"],
+        font : ["eot", "woff", "woff2", "ttf", "svg", "sfnt", "otf"],
+        image : ["png", "jpg", "jpeg", , "jpeg2000", "tif", "tiff", "gif", "bmp"],
+        view : ["html", "css", "json"]
+    },
+    peerJS : {
+        host: "peerjs-server-tmullen.mybluemix.net",
+        port: 443,
+        path: "/server",
+        secure: true
+    },
+    warnings : {
+        maxTreeSize : 40
+    },
+    maxReconnectAttempts : 10
+}

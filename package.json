@@ -1,0 +1,11 @@
+{
+  "name": "hyperhost",
+  "version": "2.0.0",
+  "description": "Host websites from the browser.",
+  "main": "hyperclient.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Thomas Mullen",
+  "license": "MIT"
+}
