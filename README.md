@@ -81,18 +81,17 @@ hyp.send({ //Send arbitrary data to server
 ##Great for demos and hackathons!
 
 **Upcoming Features:**  
-- Distributed hosting - Allow clients to opt-in to helping you host the site via a "branching-tree" mesh network.
-- Rehost option - Store processed site in localstorage for fast redeployment.
-- Features for hosts. See traffic statistics, change files without redeploying, notifications, themes, etc.
-- Zip uploading for cross-browser support.
-- No-WebRTC fallback for mobile and old browsers. 
-- Full SQLLite server with WebSQL.
-- Search other websites that are hosted. (Also, a service to expose websites to real search engines.)
-- Full documentation and better examples.
+- Distributed hosting - Allow clients to opt-in to helping you host the site via a mesh network. (Still deciding on a topology) 
+- Rehost option - Store processed site in localstorage for fast redeployment. 
+- More supported upload formats. (ZIP, individual files, non-webkit folders, ...)
+- Search other websites that are hosted. 
+- Full documentation and better examples. 
+- More custom modules (WebSockets, MySQL, templating views)  
 
 **Current Limitations:**  
+- Any Node modules used must be Browserify-able.  
 - The host must be running Chrome. The client can be [any browser supporting WebRTC](http://caniuse.com/#feat=rtcpeerconnection).
-- Very large pages, **more than 40MB**, can freeze up when clients attempt to load them. 
+- Very large pages, can freeze up when clients attempt to load them. 
 - Relative URLs pointing to hosted files inside **Javascript** files will not work. (JS cannot easily be refactored, an API for allowing this is forthcoming)
 - The **require** method only supports module *names* and not *paths*. `require('custom')`, not `require('./custom')`. (Use Browserify before uploading if you need this behaviour)
 
