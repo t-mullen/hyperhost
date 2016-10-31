@@ -9,14 +9,14 @@
 <h4 align="center">Peer-To-Peer Node Servers in the Browser.</h4>
 <br>
 
-**HyperHost** lets you run a virtual Node server in your browser and serve connections via WebRTC.
+**HyperHost** serves dynamic websites via WebRTC.
 
 Go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the folder of any *static* website containing at least an **index.html**. A link to your hosted site will appear after a few seconds. Then, anyone with a WebRTC enabled browser can see it from anywhere. It's that easy!
 
 Your site will be available so long as your browser window is open. All resources are served via an encrypted P2P connection.
 
-## You mentioned Node?
-You can also run a virtual Node server within the HyperHost static server.  
+### You mentioned Node?
+You can run a Node-like server alongside the HyperHost static server.  
 
 Put your server's starting script in a file called **HH-server.js**, then drag n' drop into HyperHost like you would a static site.  
 Put any additional server code in files with the **HH-** extension. We can **require** these.  
