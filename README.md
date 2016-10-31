@@ -62,7 +62,7 @@ Example of a **package.json**:
 ```
 
 Calls to this virtual server can only be made from the site being hosted.  
-HyperHost defines the `HyperRequest` object, which is similar to the `XMLHttpRequest` object.
+**hyperclient.js** defines the `HyperRequest` object, which is similar to the `XMLHttpRequest` object.
 ```javascript
 //Here is an example request
 var hyp = HyperRequest(); //Create a new HyperRequest
