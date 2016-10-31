@@ -1,4 +1,3 @@
-<img src="" width="300">
 <h1 align="center">
   <br>
   <a href="https://rationalcoding.github.io/HyperHost/"><img src="https://s12.postimg.org/6asslh8hp/HH_logo.png" alt="HyperHost" width="200"></a>
@@ -12,18 +11,18 @@
 
 **HyperHost** lets you run a virtual Node server in your browser and serve connections via WebRTC.
 
-Go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the folder of any website containing at least an **index.html**. A link to your hosted site will appear after a few seconds. Then, anyone with a WebRTC enabled browser can see it from anywhere. That's it. No server hosting your files, no charges, just direct hosting.
+Go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the folder of any *static* website containing at least an **index.html**. A link to your hosted site will appear after a few seconds. Then, anyone with a WebRTC enabled browser can see it from anywhere. It's that easy!
 
 Your site will be available so long as your browser window is open. All resources are served via an encrypted P2P connection.
 
-##A WebRTC-powered Node server in Your Browser
-You can also run a virtual Node server straight in your browser.
+## You mentioned Node?
+You can also run a virtual Node server within the HyperHost static server.  
 
-Put your server's starting code in a file called **HH-server.js**, then drag n' drop into HyperHost like you would a static site.  
-Put any additional server code in files with the **HH-** extension. We can **require** these.
-Put any modules you need to be downloaded from NPM in a file called **package.json**
+Put your server's starting script in a file called **HH-server.js**, then drag n' drop into HyperHost like you would a static site.  
+Put any additional server code in files with the **HH-** extension. We can **require** these.  
+Put any modules you need to be downloaded from NPM in a file called **package.json**. These will be fetched by Browserify CDN.  
 
-Here is an example HH-server.js
+Example of a **HH-server.js**:
 ```javascript
 var hyperhost = require('hyperhost'); //This module lets us handle P2P connections
 var fs = require('browserify-fs'); //We can require ANY module that can be Browserified
@@ -51,7 +50,7 @@ app.get('/', function (req, res) {
 app.listen(); //This starts the virtual backend
 ```
 
-Here is an example of **package.json**
+Example of a **package.json**:
 ```javascript
 {
   "name": "MyNodeApp",
@@ -92,10 +91,10 @@ hyp.send({ //Send arbitrary data to server
 - Full documentation and better examples.
 
 **Current Limitations:**  
-- The host must be running Chrome (no other browser supports folder drag n' drop). The client can be [any browser supporting WebRTC](http://caniuse.com/#feat=rtcpeerconnection).
+- The host must be running Chrome. The client can be [any browser supporting WebRTC](http://caniuse.com/#feat=rtcpeerconnection).
 - Very large pages, **more than 40MB**, can freeze up when clients attempt to load them. 
-- URLs pointing to hosted files inside **Javascript** files will not work. **External URLs will work.** (JS cannot easily be refactored, a partial fix might happen.)
-- Truly massive files cannot be hosted due to encoding being impossible.
+- Relative URLs pointing to hosted files inside **Javascript** files will not work. (JS cannot easily be refactored, an API for allowing this is forthcoming)
+- The **require** method only supports module *names* and not *paths*. `require('custom')`, not `require('./custom')`. (Use Browserify before uploading if you need this behaviour)
 
 **Notes:**  
 You can host the files in this repo anywhere (even on a file:// domain!) if you don't want to use Github's servers for the initial resources. You can also use any PeerJS signalling server.
