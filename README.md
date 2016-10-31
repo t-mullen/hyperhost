@@ -1,6 +1,8 @@
 # HyperHost
 ##Instant Drag n' Drop Hosting
 
+<img src="https://s12.postimg.org/6asslh8hp/HH_logo.png" width="300">
+
 Go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the folder of any website containing at least an **index.html**. A link to your hosted site will appear after a few seconds. Then, anyone with a WebRTC enabled browser can see it from anywhere. That's it. No server hosting your files, no charges, just direct hosting.
 
 Your site will be available so long as your browser window is open. All resources are served via an encrypted P2P connection.
