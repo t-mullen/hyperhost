@@ -147,7 +147,10 @@ module.exports.injectScripts = function (scripts, mappingObject, callback) {
     var remaining = scripts.length;
 
     function loadScript(i) {
-        if (!scripts[i]) return;
+        if (!scripts[i]){
+            callback();
+            return;
+        }
         var script = document.createElement("script");
         script.type = "text/javascript";
 
