@@ -74,7 +74,7 @@ hyp.send({ //Send arbitrary data to server
 });
 ```
 
-### Development
+### Integrate
 
 The service at https://rationalcoding.github.io/HyperHost/ is just one use-case of HyperHost.  
 You can easily integrate instant hosting over WebRTC into any project.  
