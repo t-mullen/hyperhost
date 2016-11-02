@@ -10,7 +10,7 @@
 <br>
 
 Drag and drop your website (with at least an **index.html**) into https://rationalcoding.github.io/HyperHost/.  
-It will be instantly served ***from your browser*** over WebRTC.
+It will be instantly served ***from your browser*** via WebRTC.
 
 ### Node Servers
 HyperHost emulates Node.js servers.
