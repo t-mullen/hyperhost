@@ -42,6 +42,8 @@ app.get('/', function (req, res) {
 app.listen();
 ```
 
+### Pull from NPM
+
 You can pull NPM modules by adding a **package.json**:
 ```javascript
 {
@@ -52,6 +54,8 @@ You can pull NPM modules by adding a **package.json**:
   }
 }
 ```
+
+### Client Code
 
 Calls to this Node server can be made from the pages being hosted.  
 **hyperclient.js** provides the `HyperRequest` object, similar to the `XMLHttpRequest` object.
@@ -67,6 +71,34 @@ hyp.send({ //Send arbitrary data to server
     message: "hello",
     moreData: [12, 42, 21, ],
     evenMore: {}
+});
+```
+
+### Development
+
+The service at https://rationalcoding.github.io/HyperHost/ is just one use-case of HyperHost.  
+You can easily integrate instant hosting over WebRTC into any project.  
+```javascript
+var host = new HyperHost(); // Create a new HyperHost instance
+
+host.on('ready', function(url){
+  window.open(url); // Open the window whena URL is available
+});
+
+// Digest the files to be served.
+host.io.contentTree([
+    {
+       name : 'index.html',
+       content : '<html><body>Hello World</body></html>'
+    },
+    {
+        name : "HH-server.js",
+        content : 'var hyperhost = require("hyperhost"); console.log(hyperhost);'
+    }
+], 
+
+function(){  
+    host.launch();   // When digest is done, launch the server
 });
 ```
 
