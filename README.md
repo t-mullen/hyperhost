@@ -11,58 +11,53 @@
 
 **HyperHost** serves dynamic websites via WebRTC.
 
-Go to https://rationalcoding.github.io/HyperHost/ and drag n' drop the folder of any *static* website containing at least an **index.html**. A link to your hosted site will appear after a few seconds. Then, anyone with a WebRTC enabled browser can see it from anywhere. It's that easy!
+Drag and drop your website (with at least an **index.html**) into https://rationalcoding.github.io/HyperHost/. A link will appear where your website is hosted!
 
-Your site will be available so long as your browser window is open. All resources are served via an encrypted P2P connection.
+Everything is served from your *browser* over WebRTC.
 
-### You mentioned Node?
-You can run a Node-like server alongside the HyperHost static server.  
+### Node Servers
+HyperHost emulates Node.js servers.
 
-Put your server's starting script in a file called **HH-server.js**, then drag n' drop into HyperHost like you would a static site.  
-Put any additional server code in files with the **HH-** extension. We can **require** these.  
-Put any modules you need to be downloaded from NPM in a file called **package.json**. These will be fetched by Browserify CDN.  
+Drag and drop a folder containing a file an **index.html** and a **HH-server.js**.
+Inside **HH-server.js**, you can put your Node start script.  
 
 Example of a **HH-server.js**:
 ```javascript
-var hyperhost = require('hyperhost'); //This module lets us handle P2P connections
-var fs = require('browserify-fs'); //We can require ANY module that can be Browserified
-var custom = require('custom'); //We can require our other server files.
-var app = hyperhost.createApp(); //Creates our app
+var hyperhost = require('hyperhost'); // This special module lets us handle WebRTC connections (it's like Express)
+var fs = require('browserify-fs');    // require any module that can be Browserified
+var custom = require('custom');       // require custom modules that you upload with the "HH-" prefix (ie HH-custom.js"
 
-//Handles 'get requests' to the '/' route
-app.get('/', function (req, res) {
-    //We can use our modules
-    
+var app = hyperhost.createApp();
+app.get('/', function (req, res) {    
+
     custom.someFunction();
-    fs.mkdir('/home');
-    fs.writeFile('/home/hello-world.txt', "Virtual file system? Yes please!");
     
-    //We can send any data over the connection (including files, blobs, anything)
+    fs.mkdir('/home');
+    fs.writeFile('/home/hello-world.txt', "browserify-fs is used to create a virtual file system!");
+    
+    // Send any data over WebRTC (objects, files, blobs)
     res.send({
-        exampleData: "hello!",
-        moreData: [1, 4, 2, 3],
-        more: {
-            anyData: {}
-        }
+        exampleData: "send any serializable data",
+        a : []
     });
 });
 
-app.listen(); //This starts the virtual backend
+app.listen();
 ```
 
-Example of a **package.json**:
+You can pull NPM modules by adding a **package.json**:
 ```javascript
 {
   "name": "MyNodeApp",
   "dependencies": { 
-    "browserify-fs": ">1.0.0", //These are modules that will be pulled from NPM
-    "crypto-browserify" : "", //Don't specify a version number for the latest version
+    "browserify-fs": ">1.0.0", // These are modules that will be pulled from NPM
+    "crypto-browserify" : "",  //
   }
 }
 ```
 
-Calls to this virtual server can only be made from the site being hosted.  
-**hyperclient.js** defines the `HyperRequest` object, which is similar to the `XMLHttpRequest` object.
+Calls to this Node server can be made from the pages being hosted.  
+**hyperclient.js** provides the `HyperRequest` object, similar to the `XMLHttpRequest` object.
 ```javascript
 //Here is an example request
 var hyp = HyperRequest(); //Create a new HyperRequest
