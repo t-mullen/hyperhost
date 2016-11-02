@@ -21,7 +21,7 @@ function StaticServer(views, hasVirtualBackend) {
     /*
         Connects to signalling server and starts serving views.
     */
-    this.listen = function () {
+    this.launch = function () {
         this.config = this.config || globalConfig.peerJS;
 
         peer = new Peer(MY_PEER_ID, this.config); //Create the peer     

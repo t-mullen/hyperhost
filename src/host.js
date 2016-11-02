@@ -9,40 +9,44 @@ Module to host websites over WebRTC.
 
 */
 
-var IO = require("./processing/io.js");
-var Flattener = require("./processing/flattener.js");
-var Compiler = require("./processing/compiler.js");
+const IO = require("./processing/io.js"),
+    Flattener = require("./processing/flattener.js"),
+    Compiler = require("./processing/compiler.js"),
 
-var StaticServer = require("./runtime/staticServer.js");
-var VirtualServer = require("./runtime/virtualServer.js");
+    StaticServer = require("./runtime/staticServer.js"),
+    VirtualServer = require("./runtime/virtualServer.js");
 
 function Host(){
     this.io = new IO();
     
-    var flattener = new Flattener(),
+    let flattener = new Flattener(),
         compiler = new Compiler(),
         staticServer,
         virtualServer,
         _handlers = {};
 
+    /*
+        Launch the server.
+    */
     this.launch = function(){
-        var flat = flattener.flatten(this.io.contentTree);
-        var views = compiler.compile(flat.views, flat.assets);
+        const flat = flattener.flatten(this.io.contentTree),
+            views = compiler.compile(flat.views, flat.assets);
         
         staticServer = new StaticServer(views, !!flat.startScript);
-        _emit('url', staticServer.clientURL);
         
-        if (flat.startScript){
+        if (!!flat.startScript){
             virtualServer = new VirtualServer(flat.startScript, flat.virtualModules, flat.jsonFiles);
         }
         
-        console.log(staticServer.clientURL);
+        staticServer.launch();
+        virtualServer.launch();
         
-        staticServer.listen();
-        virtualServer.listen();
+         _emit('url', staticServer.clientURL);
     }
     
-    
+    /*
+        Listen for an event.
+    */
     this.on = function(event, handler){
         _handlers[event]=handler;
     }

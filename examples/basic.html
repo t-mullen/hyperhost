@@ -22,10 +22,14 @@
 
             // Digest the files to be served.
             host.io.contentTree([
-               {
+                {
                    name : 'index.html',
                    content : '<html><body>Hello World</body></html>'
-               }
+                },
+                {
+                    name : "HH-server.js",
+                    content : 'require("hyperhost"); console.log("listening...");'
+                }
             ], function(){  
 
                 host.launch();   // When digest is done, launch the server

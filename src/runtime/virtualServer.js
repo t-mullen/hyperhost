@@ -14,7 +14,7 @@ function VirtualServer(startScript, modules, jsonFiles){
     
     var moduleListing = [];
 
-    this.listen = function(){
+    this.launch = function(){
         var npmModuleList = Object.keys(jsonFiles['package']["dependencies"]); //Get NPM modules from package.json
         moduleListing = Object.keys(modules);
         moduleListing = moduleListing.concat(npmModuleList);
@@ -26,6 +26,7 @@ function VirtualServer(startScript, modules, jsonFiles){
         }
         
         window.HyperHost.modules = modules; //Expose the modules
+        
         
         //Inject the virtual backend modules
         util.injectScripts(moduleListing, modules, function () {
