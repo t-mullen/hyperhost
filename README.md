@@ -82,7 +82,7 @@ You can easily integrate instant hosting over WebRTC into any project.
 var host = new HyperHost(); // Create a new HyperHost instance
 
 host.on('ready', function(url){
-  window.open(url); // Open the window whena URL is available
+  window.open(url); // Open the window when a URL is available
 });
 
 // Digest the files to be served.
