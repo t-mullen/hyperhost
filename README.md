@@ -9,7 +9,8 @@
 <h4 align="center">Peer-To-Peer Node Servers in the Browser.</h4>
 <br>
 
-Drag and drop your website (with at least an **index.html**) into https://rationalcoding.github.io/HyperHost/. Everything is instantly served from your *browser* over WebRTC.
+Drag and drop your website (with at least an **index.html**) into https://rationalcoding.github.io/HyperHost/. 
+Everything is instantly served from your *browser* over WebRTC.
 
 ### Node Servers
 HyperHost emulates Node.js servers.
