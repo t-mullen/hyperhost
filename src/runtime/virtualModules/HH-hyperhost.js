@@ -35,18 +35,16 @@ var Response = function (conn, id) {
 
 //Creates the server app
 module.exports.createApp = function () {
-    var app = {};
-
-    var listening = false;
+    var listening = false,
 
     //Constructs a new router function with the specified methods allowed
-    var RouterFunction = function (methods) {
+    RouterFunction = function (methods) {
         var routerFunction = function (route, requestListener, next) {
             addEventListener('hyperdata', function (e) {
                 if (!listening) return; //Ignore requests made before server is started
                 if (route !== e.detail.request.route) return; //Ignore invalid routes TODO: error here
                 if (routerFunction.methods.indexOf(e.detail.request.method.toLowerCase()) === -1) { //Block invalid method
-                    console.error("> Client requested unsupported route '" + e.detail.request.method + "' on route '" + route + "'");
+                    console.error("Client requested unsupported route '" + e.detail.request.method + "' on route '" + route + "'");
                     return;
                 }
                 console.log(e.detail.id + " : " + e.detail.request.method.toUpperCase() + " " + route)
@@ -55,20 +53,20 @@ module.exports.createApp = function () {
         }
         routerFunction.methods = methods;
         return routerFunction;
-    }
+    };
 
     //Router functions for different methods
-    app.all = new RouterFunction(['get', 'post']);
-    app.get = new RouterFunction(['get']);
-    app.post = new RouterFunction(['post']);
+    app = {
+        all : new RouterFunction(['get', 'post']),
+        get : new RouterFunction(['get']),
+        post : new RouterFunction(['post']) 
+    };
 
     //Allows requests to be served
     app.listen = function () {
         listening = true;
-        console.log("> Virtual server listenting...");
-    }
+        console.log("Virtual server listenting...");
+    };
 
     return app;
 }
-
-return module.exports;

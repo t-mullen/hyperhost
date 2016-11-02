@@ -6,23 +6,42 @@ Emulates a Node.js server.
 
 */
 
-var config = require("../config/config.json");
-var util = require("../util/util.js");
-var hyperhostRequireModule = require("./virtualModules/HH-hyperhost.js");
+const config = require('../config/config.json'),
+      util = require('../util/util.js'),
+      hyperhostRequireModule = require('./virtualModules/HH-hyperhost.js');
 
-function VirtualServer(startScript, modules, jsonFiles){
+function VirtualServer(startScript, modules, jsonFiles) {
+    'use strict';
     
-    var moduleListing = [];
-
-    this.launch = function(){
-        var npmModuleList = Object.keys(jsonFiles['package']["dependencies"]); //Get NPM modules from package.json
+    let moduleListing = [];
+    
+    // The 'require' emulator
+    const HHrequire = function HHrequire(moduleName) {
+        if (moduleListing.indexOf(moduleName) === -1) {   
+            return;
+        } else {
+            return modules[moduleName];
+        }
+    },
+    
+    
+    //Gets a Wzrd.in url from module name
+    getWzrdModuleUrl = function getWzrdModuleUrl(name, version) {
+        return config.paths.wzrd + name + jsonFiles['package']['dependencies'][name] + (!!version ? '@' + version : '');
+    };
+    
+    /*
+        Launch the virtual server.
+    */
+    this.launch = function launch() {
+        let npmModuleList = Object.keys(jsonFiles['package']['dependencies']); //Get NPM modules from package.json
         moduleListing = Object.keys(modules);
         moduleListing = moduleListing.concat(npmModuleList);
         
         
         //Generate urls for wzrd.in files
-        for (var i = 0; i < npmModuleList.length; i++) {
-            modules[npmModuleList[i]] = getWzrdModuleUrl(npmModuleList[i], jsonFiles["package"]["dependencies"][npmModuleList[i]]);
+        for (let i = 0; i < npmModuleList.length; i++) {
+            modules[npmModuleList[i]] = getWzrdModuleUrl(npmModuleList[i], jsonFiles['package']['dependencies'][npmModuleList[i]]);
         }
         
         window.HyperHost.modules = modules; //Expose the modules
@@ -32,7 +51,7 @@ function VirtualServer(startScript, modules, jsonFiles){
         util.injectScripts(moduleListing, modules, function () {
                   
             //Wzrd will put everything on the window, so we need to move it to the modules
-            for (var i = 0; i < npmModuleList.length; i++) {
+            for (let i = 0; i < npmModuleList.length; i++) {
                 modules[npmModuleList[i]] = window[util.camelize(npmModuleList[i])];
             }
 
@@ -43,27 +62,12 @@ function VirtualServer(startScript, modules, jsonFiles){
             window.require = HHrequire; //Overwrite any other 'require' methods
             
             //Inject the virtual start script after modules loaded
-            var script = document.createElement('script');
+            const script = document.createElement('script');
             script.setAttribute('type', 'text/javascript');
             script.setAttribute('src', startScript);
             document.head.appendChild(script);
         });
-    }
-    
-    // The 'require' emulator
-    var HHrequire = function (moduleName) {
-        if (moduleListing.indexOf(moduleName) === -1) {   
-            return;
-        } else {
-            return modules[moduleName];
-        }
-    }
-    
-    
-    //Gets a Wzrd.in url from module name
-    var getWzrdModuleUrl = function(name, version) {
-        return config.paths.wzrd + name + jsonFiles["package"]["dependencies"][name] + (!!version ? "@" + version : "");
-    }
+    };
 }
 
 

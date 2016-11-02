@@ -9,32 +9,43 @@ Module to host websites over WebRTC.
 
 */
 
-const IO = require("./processing/io.js"),
-    Flattener = require("./processing/flattener.js"),
-    Compiler = require("./processing/compiler.js"),
+const IO = require('./processing/io.js'),
+      Flattener = require('./processing/flattener.js'),
+      Compiler = require('./processing/compiler.js'),
 
-    StaticServer = require("./runtime/staticServer.js"),
-    VirtualServer = require("./runtime/virtualServer.js");
+      StaticServer = require('./runtime/staticServer.js'),
+      VirtualServer = require('./runtime/virtualServer.js');
 
 function Host(){
+    'use strict';
+    
     this.io = new IO();
     
-    let flattener = new Flattener(),
-        compiler = new Compiler(),
-        staticServer,
+    let staticServer,
         virtualServer,
         _handlers = {};
+    
+    const flattener = new Flattener(),
+          compiler = new Compiler(),
+    
+          
+    _emit = function _emit(event, data){
+        var fn = _handlers[event];
+        if (fn && typeof(fn) === 'function') {
+            fn(data);
+        }
+    };
 
     /*
         Launch the server.
     */
-    this.launch = function(){
+    this.launch = function launch() {
         const flat = flattener.flatten(this.io.contentTree),
-            views = compiler.compile(flat.views, flat.assets);
+              views = compiler.compile(flat.views, flat.assets);
         
         staticServer = new StaticServer(views, !!flat.startScript);
         
-        if (!!flat.startScript){
+        if (flat.startScript){
             virtualServer = new VirtualServer(flat.startScript, flat.virtualModules, flat.jsonFiles);
         }
         
@@ -42,21 +53,14 @@ function Host(){
         virtualServer.launch();
         
          _emit('url', staticServer.clientURL);
-    }
+    };
     
     /*
         Listen for an event.
     */
-    this.on = function(event, handler){
+    this.on = function on(event, handler) {
         _handlers[event]=handler;
-    }
-    
-    var _emit = function(event, data){
-        var fn = _handlers[event];
-        if (fn && typeof(fn) === 'function'){
-            fn(data);
-        }
-    }
+    };
 }
 
 

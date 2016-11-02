@@ -6,45 +6,84 @@ Serves static resources over WebRTC.
 
 */
 
-var globalConfig = require("../config/config.json");
+const globalConfig = require('../config/config.json');
 
 function StaticServer(views, hasVirtualBackend) {
+    'use strict';
 
-    var MY_PEER_ID = parseInt(Math.random() * 1e15, 10).toString(16), // A random PeerJS ID
-        peer,                    //The PeerJS peer object
-        MAX_RECONNECT_ATTEMPTS = globalConfig.maxReconnectAttempts;  //Max attempts to connect to signalling server    
+    const myPeerID = parseInt(Math.random() * 1e15, 10).toString(16), // A random PeerJS ID
+          maxReconnectAttempts = globalConfig.maxReconnectAttempts;  // Max attempts to connect to signalling server    
+    
+    let peer,   //The PeerJS peer object
+        heartbeater;  
 
+    // Fixes PeerJS' habit of disconnecting us from the signalling server
+    const makePeerHeartbeater = function makePeerHeartbeater(peer) {
+        let timeoutID = 0;
 
-    this.clientURL = globalConfig.paths.client + MY_PEER_ID; //The URL where clients can connect
+        function heartbeat() {
+            timeoutID = setTimeout(heartbeat, 20000);
+            if (peer.socket._wsOpen()) {
+                peer.socket.send({
+                    type: 'HEARTBEAT'
+                });
+            }
+        }
+        heartbeat();
+        
+        return {
+            start: function () {
+                if (timeoutID === 0) {
+                    heartbeat();
+                }
+            },
+            stop: function () {
+                clearTimeout(timeoutID);
+                timeoutID = 0;
+            }
+        };
+    },
+
+    // Returns the view for the provided path
+    getView = function (path) {
+        for (let i = 0; i < views.length; i++) {
+            if (views[i].path === path) {
+                return views[i];
+            }
+        }
+    };
+    
+    
+    this.clientURL = globalConfig.paths.client + myPeerID; //The URL where clients can connect
     this.views = views;            //An array of compiled views
 
     /*
         Connects to signalling server and starts serving views.
     */
-    this.launch = function () {
+    this.launch = function launch() {
         this.config = this.config || globalConfig.peerJS;
 
-        peer = new Peer(MY_PEER_ID, this.config); //Create the peer     
-        peer.on('error', function (err) { 
+        peer = new Peer(myPeerID, this.config); //Create the peer     
+        peer.on('error', (err) => { 
             //TODO: Route PeerJS errors
         });
-        makePeerHeartbeater(peer);
+        heartbeater = makePeerHeartbeater(peer);
 
         // Handle incoming connections
-        peer.on('connection', function (conn) {
+        peer.on('connection', (conn) => {
             //TODO: Eventing
 
-            conn.on("close", function () {
+            conn.on('close', () => {
                 //TODO: Eventing
             });
 
             // Any data received by the server is intended for the virtual backend
-            conn.on('data', function (data) {
+            conn.on('data', (data) => {
                 //TODO: Eventing
                 
                 // Send server a request event
-                if (data.type === "request") {
-                    var event = new CustomEvent('hyperdata', {
+                if (data.type === 'request') {
+                    let event = new CustomEvent('hyperdata', {
                         detail: {
                             request: JSON.parse(data.request),
                             connection: conn,
@@ -55,11 +94,11 @@ function StaticServer(views, hasVirtualBackend) {
                 } 
                 
                 // Intercept post-load view requests
-                else if (data.type === "view") {
-                    var view = getView(data.path);
+                else if (data.type === 'view') {
+                    let view = getView(data.path);
                     view.body = view.content;
                     conn.send({
-                        type: "view",
+                        type: 'view',
                         path: data.path,
                         content: {
                             view: view,
@@ -72,21 +111,21 @@ function StaticServer(views, hasVirtualBackend) {
         
         
         // Handle disconnections from signalling server
-        var failures = 0;
-        peer.on('disconnected', function () {
+        let failures = 0;
+        peer.on('disconnected', () => {
             //TODO: Eventing
             peer.reconnect(); //Auto-reconnect
 
-            var check = setInterval(function () { //Check the reconnection worked
+            let check = setInterval(() => { //Check the reconnection worked
                 if (!peer.disconnected) {
                     //TODO: Eventing
-                    var failures = 0;
+                    failures = 0;
                     clearInterval(check);
                 } else {
                     failures++;
-                    if (failures >= MAX_RECONNECT_ATTEMPTs) {
+                    if (failures >= maxReconnectAttempts) {
                         //TODO: Eventing
-                        throw new Error("Could not reconnect to signalling server.");
+                        throw new Error('Could not reconnect to signalling server.');
                     }
                 }
             }, 1000);
@@ -94,42 +133,6 @@ function StaticServer(views, hasVirtualBackend) {
         
         return this.clientURL;
     };
-    
-
-    // Fixes PeerJS' habit of disconnecting us from the signalling server
-    var makePeerHeartbeater = function (peer) {
-        var timeoutID = 0;
-
-        function heartbeat() {
-            timeoutID = setTimeout(heartbeat, 20000);
-            if (peer.socket._wsOpen()) {
-                peer.socket.send({
-                    type: 'HEARTBEAT'
-                });
-            }
-        }
-        heartbeat();
-        return {
-            start: function () {
-                if (timeoutID === 0) {
-                    heartbeat();
-                }
-            },
-            stop: function () {
-                clearTimeout(timeoutID);
-                timeoutId = 0;
-            }
-        };
-    }
-
-    // Returns the view for the provided path
-    var getView = function (path) {
-        for (var i = 0; i < views.length; i++) {
-            if (views[i].path === path) {
-                return views[i];
-            }
-        }
-    }
 }
 
 module.exports = StaticServer;
