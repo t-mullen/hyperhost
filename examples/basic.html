@@ -1,0 +1,37 @@
+<html lang="en">
+    <head>
+
+    </head>
+    <body>
+        Click Anywhere To Launch!
+    
+    </body>
+    
+    <script src="../dist/host/vendor/peer.min.js"></script>
+    <script src="../dist/host/hyperhost.js"></script>
+    <script>   
+        document.addEventListener('click', function(){
+        
+            // Creates a new HH instance and connects to the signalling server.
+            var host = new HyperHost();
+
+            // Listen for a client url, then open a new window with our client
+            host.on('url', function(url){
+               window.open(url); 
+            });
+
+            // Digest the files to be served.
+            host.io.contentTree([
+               {
+                   name : 'index.html',
+                   content : '<html><body>Hello World</body></html>'
+               }
+            ], function(){  
+
+                host.launch();   // When digest is done, launch the server
+
+            });
+            
+        });
+    </script>
+</html>

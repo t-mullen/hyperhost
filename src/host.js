@@ -19,21 +19,39 @@ var VirtualServer = require("./runtime/virtualServer.js");
 function Host(){
     this.io = new IO();
     
-    var flattener = new Flattener();
-    var compiler = new Compiler();
+    var flattener = new Flattener(),
+        compiler = new Compiler(),
+        staticServer,
+        virtualServer,
+        _handlers = {};
 
     this.launch = function(){
         var flat = flattener.flatten(this.io.contentTree);
         var views = compiler.compile(flat.views, flat.assets);
         
-        var staticServer = new StaticServer(views, !!flat.startScript);
-        this.clientURL = staticServer.clientURL;
-        var virtualServer = new VirtualServer(flat.startScript, flat.virtualModules, flat.jsonFiles);
+        staticServer = new StaticServer(views, !!flat.startScript);
+        _emit('url', staticServer.clientURL);
+        
+        if (flat.startScript){
+            virtualServer = new VirtualServer(flat.startScript, flat.virtualModules, flat.jsonFiles);
+        }
         
         console.log(staticServer.clientURL);
         
         staticServer.listen();
         virtualServer.listen();
+    }
+    
+    
+    this.on = function(event, handler){
+        _handlers[event]=handler;
+    }
+    
+    var _emit = function(event, data){
+        var fn = _handlers[event];
+        if (fn && typeof(fn) === 'function'){
+            fn(data);
+        }
     }
 }
 
