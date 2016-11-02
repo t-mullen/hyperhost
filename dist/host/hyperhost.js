@@ -74,7 +74,7 @@ function Host() {
         staticServer.launch();
         virtualServer.launch();
 
-        _emit('url', staticServer.clientURL);
+        _emit('ready', staticServer.clientURL);
     };
 
     /*

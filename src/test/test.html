@@ -16,7 +16,7 @@
             var host = new HyperHost();
 
             // Listen for a client url, then open a new window with our client
-            host.on('url', function(url){
+            host.on('ready', function(url){
                window.open(url); 
             });
 
