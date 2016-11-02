@@ -82,9 +82,7 @@ hyp.send({ //Send arbitrary data to server
 
 **Upcoming Features:**  
 - Distributed hosting - Allow clients to opt-in to helping you host the site via a mesh network. (Still deciding on a topology) 
-- Rehost option - Store processed site in localstorage for fast redeployment. 
 - More supported upload formats. (ZIP, individual files, non-webkit folders, ...)
-- Search other websites that are hosted. 
 - Full documentation and better examples. 
 - More custom modules (WebSockets, MySQL, templating views)  
 
