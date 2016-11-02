@@ -85,7 +85,11 @@ host.on('ready', function(url){
   window.open(url); // Open the window when a URL is available
 });
 
-// Digest the files to be served.
+host.io.on('digest', function(){
+    host.launch();  // Launch the server when digest is completed
+});
+
+// Digest the content to be served.
 host.io.contentTree([
     {
        name : 'index.html',
@@ -95,11 +99,7 @@ host.io.contentTree([
         name : "HH-server.js",
         content : 'var hyperhost = require("hyperhost"); console.log(hyperhost);'
     }
-], 
-
-function(){  
-    host.launch();   // When digest is done, launch the server
-});
+]);
 ```
 
 ##Great for demos and hackathons!

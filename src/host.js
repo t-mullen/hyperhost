@@ -35,6 +35,13 @@ function Host(){
             fn(data);
         }
     };
+    
+    /*
+        Listen for an event.
+    */
+    this.on = function on(event, handler) {
+        _handlers[event]=handler;
+    };
 
     /*
         Launch the server.
@@ -52,14 +59,7 @@ function Host(){
         staticServer.launch();
         virtualServer.launch();
         
-         _emit('ready', staticServer.clientURL);
-    };
-    
-    /*
-        Listen for an event.
-    */
-    this.on = function on(event, handler) {
-        _handlers[event]=handler;
+        _emit('ready', staticServer.clientURL);
     };
 }
 
