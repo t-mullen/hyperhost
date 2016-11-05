@@ -1,58 +1,33 @@
 /*
-Client that renders the processed HTML served by the host.
+Client that connects to and renders websites served by a HyperHost host.
 Thomas Mullen 2016
 */
 
-(function () {
-    var initialized = false;
-    var dataLoaded = false;
+(function (Peer) {
+    'use strict';
+    
+    var initialized = false,
+        dataLoaded = false,
+        conn,
+        
+        viewframeElement = document.getElementById('HYPERHOST-viewframe'),
+        dropzoneElement = document.getElementById('HYPERHOST-dropzone'),
+        h1Element = document.getElementById('HYPERHOST-HEADER'),
+        h2Element = document.querySelector('#HYPERHOST-dropzone > div > h2'),
+        aElement = document.querySelector('#HYPERHOST-dropzone > div > a'),
 
-    document.addEventListener("DOMContentLoaded", initialize);
-    window.addEventListener('hypermessage', handleHyperMessage);
-
-    function getParameterByName(name, url) {
+    getParameterByName = function getParameterByName(name, url) {
         if (!url) url = window.location.href;
-        name = name.replace(/[\[\]]/g, "\\$&");
-        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
             results = regex.exec(url);
         if (!results) return null;
         if (!results[2]) return '';
-        return decodeURIComponent(results[2].replace(/\+/g, " "));
-    }
-
-    var ajax = function (url, successCallback, errorCallback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", url, true);
-        xhr.onload = function (e) {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    if (successCallback && successCallback.constructor == Function) {
-                        return successCallback(xhr.responseText);
-                    }
-                } else {
-                    if (errorCallback && errorCallback.constructor == Function) {
-                        return errorCallback(xhr.statusText);
-                    } else {
-                        console.error("Failed to get resource '" + url + "' Error: " + xhr.statusText);
-                    }
-                }
-            }
-        };
-        xhr.onerror = function (e) {
-            if (errorCallback && errorCallback.constructor == Function) {
-                return errorCallback(xhr.statusText);
-            } else {
-                console.error("Failed to get resource. Error: " + xhr.statusText);
-            }
-        };
-        xhr.send(null);
-    };
-
-    var conn;
-
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    },
 
     //Define the HyperRequest object (akin to XMLHttpRequest)
-    var HyperRequestSrc = 'var HyperRequest=function(){var e={};return e.onload=function(){},e.open=function(t,n){e.method=t,e.route=n},e.send=function(t){function n(t){"response"===t.detail.type&&t.detail.id===r&&(window.removeEventListener(i,n),e.onload(t.detail.response))}var o=window.parent,r=Math.random().toString().substr(0,30),d=new CustomEvent("hypermessage",{detail:{type:"request",request:{method:e.method,route:e.route,body:t},id:r}});o.dispatchEvent(d);var i=window.addEventListener("hypermessage",n)},e};';
+    HyperRequestSrc = 'var HyperRequest=function(){var e={};return e.onload=function(){},e.open=function(t,n){e.method=t,e.route=n},e.send=function(t){function n(t){"response"===t.detail.type&&t.detail.id===r&&(window.removeEventListener(i,n),e.onload(t.detail.response))}var o=window.parent,r=Math.random().toString().substr(0,30),d=new CustomEvent("hypermessage",{detail:{type:"request",request:{method:e.method,route:e.route,body:t},id:r}});o.dispatchEvent(d);var i=window.addEventListener("hypermessage",n)},e};',
     /*
     var HyperRequest = function () {
         var self = {};
@@ -88,24 +63,62 @@ Thomas Mullen 2016
         return self;
     }
     */
+    
+    //Renders a different compiled HTML page in the viewframe
+    HYPERHOST_NAVIGATE = function HYPERHOST_NAVIGATE(path) {
+        console.log('Requested ' + path);
+        conn.send({
+            type: 'view',
+            path: path
+        });
+    },
+        
+    //Send message to viewFrame document (across iframe)
+    sendHyperMessage = function sendHyperMessage(data) {
+        var childWindow = viewframeElement.contentWindow;
+        var event = new CustomEvent('hypermessage', {
+            detail: data
+        });
+        childWindow.dispatchEvent(event);
+    },
+        
+    //Make a request to the virtual backend
+    makeHyperRequest = function makeHyperRequest(id, request) {
+        conn.send({
+            id: id,
+            type: 'request',
+            request: JSON.stringify(request)
+        });
+    },
 
-    function initialize(event) {
-        if (initialized) return;
-        initialized = true;
-        //Request resources
-        var MY_ID = parseInt(Math.random() * 1e15, 10).toString(16);
-        var PEER_SERVER = {
-            host: "peerjs-server-tmullen.mybluemix.net",
+    //Listen to messages from viewFrame document (across iframe)
+    handleHyperMessage = function handleHyperMessage(e) {
+        if (e.detail.type === 'navigate') {
+            HYPERHOST_NAVIGATE(e.detail.path);
+        } else if (e.detail.type === 'request') {
+            makeHyperRequest(e.detail.id, e.detail.request);
+        }
+    },
+
+    // Initialize the client
+    initialize = function initialize() {
+        if (initialized) {
+            return;
+        }else{
+            initialized = true;
+        }
+
+        var MY_ID = parseInt(Math.random() * 1e15, 10).toString(16),
+            PEER_SERVER = {
+            host: 'peerjs-server-tmullen.mybluemix.net',
             port: 443,
-            path: "/server",
+            path: '/server',
             secure: true
-        };
-        var peer = new Peer(MY_ID, PEER_SERVER); //Create the peer object
+        },
+            peer = new Peer(MY_ID, PEER_SERVER), //Create the peer object
 
         //Heartbeat to prevent disconnection from signalling server
-        var heartbeater = makePeerHeartbeater(peer);
-
-        function makePeerHeartbeater(peer) {
+         makePeerHeartbeater = function makePeerHeartbeater(peer) {
             var timeoutId = 0;
 
             function heartbeat() {
@@ -117,133 +130,77 @@ Thomas Mullen 2016
                 }
             }
             heartbeat();
-            return {
-                start: function () {
-                    if (timeoutId === 0) {
-                        heartbeat();
-                    }
-                },
-                stop: function () {
-                    clearTimeout(timeoutId);
-                    timeoutId = 0;
-                }
-            };
-        }
+        };
+        makePeerHeartbeater(peer);
 
 
-        var OTHER_ID = getParameterByName("site", document.location); //Get the server's id from url
+        var OTHER_ID = getParameterByName('site', document.location); //Get the server's id from url
         if (!OTHER_ID) { //If no siteId, just go to main HyperHost
-            window.location = window.location.href.replace("client.html", "index.html");
+            window.location = window.location.href.replace('client.html', 'index.html');
         }
 
         peer.on('error', function (err) {
             console.error(err);
             if (!dataLoaded) {
-                document.getElementById("HYPERHOST-HEADER").innerHTML = "Host could not be reached.";
-                document.querySelector("#HYPERHOST-dropzone > div > a").style.display = "inherit";
+                h1Element.innerHTML = 'Host could not be reached.';
+                aElement.style.display = 'inherit';
             }
         });
 
         conn = peer.connect(OTHER_ID, {
             reliable: true
         });
-        conn.on("data", function (data) {
-            if (data.type === "view") {
-                console.log("Data received, rendering page...");
-                var newView = data.content.view;
-                var path = data.path;
+        conn.on('data', function (data) {
+            if (data.type === 'view') {
+                console.log('Data received, rendering page...');
+                var newView = data.content.view,
+                    path = data.path;
                 dataLoaded = true;
-                document.getElementById("HYPERHOST-viewframe").style.display = "inherit";
-                document.getElementById("HYPERHOST-dropzone").style.display = "none";
+                viewframeElement.style.display = 'inherit';
+                dropzoneElement.style.display = 'none';
 
 
                 if (!!newView) {
-                    document.getElementById("HYPERHOST-viewframe").srcdoc = newView.body.replace('<html>', '<html><script>' + HyperRequestSrc + '</script>');
+                    viewframeElement.srcdoc = newView.body.replace('<html>', '<html><script>' + HyperRequestSrc + '</script>');
 
                     history.pushState(path, path);
-                    console.log("Navigated to " + path);
+                    console.log('Navigated to ' + path);
                     return;
                 } else {
-                    alert("HyperHost path '" + path + "' does not exist!");
-                    if (path === "index.html") {
-                        window.location.hash = "";
-                        document.getElementById("HYPERHOST-header").innerHTML = "HyperHost";
-                        document.querySelector("#HYPERHOST-dropzone > div > h2").innerHTML = "Drop Website Root Folder Here to Instantly Host";
-                        document.getElementById("HYPERHOST-viewframe").style.display = "none";
-                        document.getElementById("HYPERHOST-dropzone").style.display = "inherit";
+                    console.error('HyperHost path "' + path + '" does not exist!');
+                    if (path === 'index.html') {
+                        window.location.hash = '';
+                        h1Element.innerHTML = 'HyperHost';
+                        h2Element.innerHTML = 'Drop Website Root Folder Here to Instantly Host';
+                        viewframeElement.style.display = 'none';
+                        dropzoneElement.style.display = 'inherit';
                     }
                 }
-            } else if (data.type === "response") {
+            } else if (data.type === 'response') {
                 sendHyperMessage({
-                    type: "response",
+                    type: 'response',
                     response: data.content,
                     id: data.id
                 });
             }
         });
-        conn.on("open", function () {
-            //Check for 'incognito mode' with ?i=true 
-            /*
-            if (!getParameterByName("i", document.location)) {
-                ajax("https://api.ipify.org?format=json", function (res) {
-                        conn.send({
-                            'type': 'ip',
-                            'ip': JSON.parse(res).ip
-                        })
-                    }),
-                    function () {}
-            }
-            */
+        conn.on('open', function () {
             HYPERHOST_NAVIGATE('index.html');
         });
-        conn.on("close", function () {
-            console.log("Connection to host closed.");
+        conn.on('close', function () {
+            console.log('Connection to host closed.');
             if (!dataLoaded) {
-                document.getElementById("HYPERHOST-HEADER").innerHTML = "Connection closed by host.";
-                document.querySelector("#HYPERHOST-dropzone > div > a").style.display = "inherit";
+                h1Element.innerHTML = 'Connection closed by host.';
+                aElement.style.display = 'inherit';
             }
         });
 
     };
-
-    //Send message to viewFrame document (across iframe)
-    function sendHyperMessage(data, type) {
-        var childWindow = document.getElementById("HYPERHOST-viewframe").contentWindow;
-        var event = new CustomEvent('hypermessage', {
-            detail: data
-        });
-        childWindow.dispatchEvent(event);
-    }
-
-    //Listen to messages from viewFrame document (across iframe)
-    function handleHyperMessage(e) {
-        if (e.detail.type == "navigate") {
-            HYPERHOST_NAVIGATE(e.detail.path);
-        } else if (e.detail.type == "request") {
-            makeHyperRequest(e.detail.id, e.detail.request);
-        }
-    }
-
-    //Make a request to the virtual backend
-    function makeHyperRequest(id, request) {
-        conn.send({
-            id: id,
-            type: "request",
-            request: JSON.stringify(request)
-        });
-    }
-
-    //Renders a different compiled HTML page in the viewframe
-    function HYPERHOST_NAVIGATE(path, goingBack) {
-        console.log("Requested " + path);
-        conn.send({
-            type: "view",
-            path: path
-        });
-    }
-
+    
     window.addEventListener('popstate', function (event) {
         HYPERHOST_NAVIGATE(event.state, true);
     });
+    window.addEventListener('hypermessage', handleHyperMessage);
+    document.addEventListener('DOMContentLoaded', initialize);
 
-}());
+}(Peer));
