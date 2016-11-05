@@ -1,5 +1,6 @@
 /*
-Example client code for making requests to a virtual backend. Feel free to use this as a template for your own applications.
+Example client code for making requests to a virtual backend.  
+A HyperRequest object is requested, then used to fetch data from the server.  
 
 See HS-server.js to see how to create a server that can handle these requests.
 */
