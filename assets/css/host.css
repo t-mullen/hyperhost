@@ -1,0 +1,49 @@
+body,html {
+    font-family: Arial;
+    text-align: center;
+    background: white;
+    padding: 0;
+    margin: 0;
+    transition: background .3s linear;
+}
+
+.container{
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    border: dashed #1784FB 7px;
+}
+
+h1 {
+    font-size: 40px;
+    margin-bottom: 0;
+    color: #1784FB;
+}
+
+h3 {
+    font-size: 26px;
+}
+
+p {
+    font-size: 20px;
+}
+
+.header {
+    margin-top: 50px;
+}
+
+
+/* Small Devices, Tablets */
+@media only screen and (min-width : 768px) {
+    h1 {
+        font-size: 70px;
+    }
+    h3 {
+    font-size: 30px;
+    }
+    p {
+        font-size: 24px;
+    }
+}
