@@ -3,14 +3,20 @@
 
     </head>
     <body>
-        Click Anywhere To Launch!
-    
+        
     </body>
     
-    <script src="../../dist/host/vendor/peer.min.js"></script>
-    <script src="../../dist/host/hyperhost.js"></script>
+    <script src="../dist/host/vendor/peer.min.js"></script>
+    <script src="../dist/host/hyperhost.js"></script>
     <script>   
-        document.addEventListener('click', function(){
+
+        document.addEventListener('dragover', function(event){
+                        event.stopPropagation();
+            event.preventDefault();
+        });
+        document.addEventListener('drop', function(event){
+            event.stopPropagation();
+            event.preventDefault();
         
             // Creates a new HH instance and connects to the signalling server.
             var host = new HyperHost();
@@ -26,16 +32,8 @@
             });
 
             // Digest the files to be served.
-            host.io.contentTree([
-                {
-                   name : 'index.html',
-                   content : '<html><body>Hello World</body></html>'
-                },
-                {
-                    name : "HH-server.js",
-                    content : 'var hyperhost = require("hyperhost"); console.log(hyperhost);'
-                }
-            ]);
+            host.io.dropEvent(event);
+
         });
     </script>
 </html>

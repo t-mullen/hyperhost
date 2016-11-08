@@ -69,17 +69,16 @@ function Host() {
         Launch the server.
     */
     this.launch = function launch() {
-        const flat = flattener.flatten(this.io.contentTree),
+        const flat = flattener.flatten(this.io.getContentTree()),
               views = compiler.compile(flat.views, flat.assets);
 
         staticServer = new StaticServer(views, !!flat.startScript);
+        staticServer.launch();
 
         if (flat.startScript) {
             virtualServer = new VirtualServer(flat.startScript, flat.virtualModules, flat.jsonFiles);
+            virtualServer.launch();
         }
-
-        staticServer.launch();
-        virtualServer.launch();
 
         _emit('ready', staticServer.clientURL);
     };
@@ -391,17 +390,73 @@ MIT License
 Builds content trees from different inputs
 */
 
+const util = require('../util/util.js'),
+      config = require('../config/config.json');
+
 function IO() {
     'use strict';
 
-    this.contentTree = { nodes: [] };
+    let contentTree = { nodes: [] };
 
     let _handlers = {};
-
     const _emit = function _emit(event, data) {
         var fn = _handlers[event];
         if (fn && typeof fn === 'function') {
             fn(data);
+        }
+    };
+
+    let remainingFiles = 0,
+        // For tracking async load
+    traversalComplete; //
+
+    // Traverses and loads a webkitEntry
+    const traverseWebkitEntry = function travserseWebkitEntry(entry, ancestors, callback) {
+        if (entry.isFile) {
+
+            entry.file(function (file) {
+                let fileReader = new FileReader(),
+                    extension = entry.name.split('.');
+                extension = extension[extension.length - 1].toLowerCase();
+
+                remainingFiles++;
+                fileReader.addEventListener('load', () => {
+                    util.deepSetTree(contentTree, {
+                        name: entry.name,
+                        content: fileReader.result
+                    }, ancestors);
+
+                    // Check for completion
+                    remainingFiles--;
+                    if (remainingFiles === 0 && traversalComplete) {
+                        callback();
+                    }
+                });
+
+                if (config.extensions.view.indexOf(extension) !== -1) {
+                    // Views must remain text
+                    fileReader.readAsText(file);
+                } else {
+                    // Everything else must be base64
+                    fileReader.readAsDataURL(file);
+                }
+            }, function (err) {
+                console.error(err);
+            });
+        } else if (entry.isDirectory) {
+            util.deepSetTree(contentTree, {
+                name: entry.name,
+                nodes: []
+            }, ancestors);
+
+            let dirReader = entry.createReader();
+            dirReader.readEntries(entries => {
+                for (var i = 0; i < entries.length; i++) {
+                    let newAncestors = ancestors.slice(0); // Clone ancestors array
+                    newAncestors.push(entry.name);
+                    traverseWebkitEntry(entries[i], newAncestors, callback);
+                }
+            });
         }
     };
 
@@ -412,11 +467,15 @@ function IO() {
         _handlers[event] = handler;
     };
 
+    this.getContentTree = function () {
+        return contentTree;
+    };
+
     /*
     Consumes a content tree directly.
     */
     this.contentTree = function (contentTree) {
-        this.contentTree = contentTree;
+        contentTree = contentTree;
         _emit('digest', {});
     };
 
@@ -442,16 +501,36 @@ function IO() {
     };
 
     /*
-    Builds from a WebkitDirectory object
+    Builds content tree from a webkitdirectory. Use with <input type='file' webkitdirectory>
     */
-    this.webkitDirectory = function (webkitDirectory, callback) {
+    this.webkitDirectory = function (fileArray) {
         throw new Error('Not implemented'); //TODO
+    };
+
+    /*
+    Builds from a drop event. Currently only supports webkitdirectory.
+    */
+    this.dropEvent = function (event) {
+        let items = event.dataTransfer.items;
+
+        traversalComplete = false;
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].webkitGetAsEntry) {
+                traverseWebkitEntry(items[i].webkitGetAsEntry(), [], function () {
+                    contentTree = contentTree.nodes[0].nodes;
+                    _emit('digest', {});
+                });
+            } else {
+                // TODO multiple and single files
+            }
+        }
+        traversalComplete = true;
     };
 }
 
 module.exports = IO;
 
-},{}],6:[function(require,module,exports){
+},{"../config/config.json":1,"../util/util.js":10}],6:[function(require,module,exports){
 /*
 Copyright (c) 2016 Thomas Mullen. All rights reserved.
 MIT License
@@ -857,7 +936,7 @@ module.exports.contains = function (array, item) {
 
 // Deeply sets a nested object/array tree, creating ancestors where they are missing
 // Ancestors is an array of names that lead from root to the target object
-module.deepSetTree = function (tempObj, value, ancestors) {
+module.exports.deepSetTree = function (tempObj, value, ancestors) {
     for (var i = 0; i < ancestors.length; i++) {
         var found = false;
         for (var i2 = 0; i2 < tempObj.nodes.length; i2++) {
@@ -871,7 +950,6 @@ module.deepSetTree = function (tempObj, value, ancestors) {
         if (!found) {
             tempObj.nodes.push({ //Create the ancestor if it doesn't exits
                 name: ancestors[i],
-                type: "folder",
                 nodes: []
             });
             for (var i2 = 0; i2 < tempObj.nodes.length; i2++) {
@@ -883,7 +961,6 @@ module.deepSetTree = function (tempObj, value, ancestors) {
             }
         }
     }
-    value.nodes = [];
     tempObj.nodes.push(value);
 };
 

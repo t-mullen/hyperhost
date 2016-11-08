@@ -47,17 +47,17 @@ function Host(){
         Launch the server.
     */
     this.launch = function launch() {
-        const flat = flattener.flatten(this.io.contentTree),
+        const flat = flattener.flatten(this.io.getContentTree()),
               views = compiler.compile(flat.views, flat.assets);
         
         staticServer = new StaticServer(views, !!flat.startScript);
-        
+        staticServer.launch();
+               
         if (flat.startScript){
             virtualServer = new VirtualServer(flat.startScript, flat.virtualModules, flat.jsonFiles);
+            virtualServer.launch();
         }
         
-        staticServer.launch();
-        virtualServer.launch();
         
         _emit('ready', staticServer.clientURL);
     };

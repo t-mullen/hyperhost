@@ -113,7 +113,7 @@ module.exports.contains = function (array, item) {
 
 // Deeply sets a nested object/array tree, creating ancestors where they are missing
 // Ancestors is an array of names that lead from root to the target object
-module.deepSetTree = function (tempObj, value, ancestors) {
+module.exports.deepSetTree = function (tempObj, value, ancestors) {
     for (var i = 0; i < ancestors.length; i++) {
         var found = false;
         for (var i2 = 0; i2 < tempObj.nodes.length; i2++) { //Locate the ancestors
@@ -126,7 +126,6 @@ module.deepSetTree = function (tempObj, value, ancestors) {
         if (!found) {
             tempObj.nodes.push({ //Create the ancestor if it doesn't exits
                 name: ancestors[i],
-                type: "folder",
                 nodes: []
             });
             for (var i2 = 0; i2 < tempObj.nodes.length; i2++) { //Get the reference of the new object
@@ -137,7 +136,6 @@ module.deepSetTree = function (tempObj, value, ancestors) {
             }
         }
     }
-    value.nodes = [];
     tempObj.nodes.push(value);
 }
 
