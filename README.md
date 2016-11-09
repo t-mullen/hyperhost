@@ -118,6 +118,6 @@ host.io.contentTree([
 - The **require** method only supports module *names* and not *paths*. `require('custom')`, not `require('./custom')`. (Use Browserify before uploading if you need this behaviour)
 
 **Notes:**  
-You can host the files in this repo anywhere (even on a file:// domain!) if you don't want to use Github's servers for the initial resources. You can also use any PeerJS signalling server.
+You can host the files in this repo anywhere (even on a file:// domain!) if you don't want to use Github's servers for the initial resources. You can also use any PeerJS signalling server (with the addition of a `/api/peers` route that returns all peer IDs)
 
 ### [MULTIHACK](https://rationalcoding.github.io/multihack) is a web-based IDE that uses HyperHost to deploy your project even faster!
