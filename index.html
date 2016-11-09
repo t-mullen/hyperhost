@@ -21,17 +21,14 @@
         document.addEventListener('dragover', function(event){
             event.stopPropagation();
             event.preventDefault();
-            document.body.style.background='black';
             document.body.style.color='white';
         });
         document.addEventListener('dragleave', function(event){
-            document.body.style.background='';
             document.body.style.color='';
         });
         document.addEventListener('drop', function(event){
             event.stopPropagation();
             event.preventDefault();
-            document.body.style.background='';
             document.body.style.color='';
         
             // Creates a new HH instance and connects to the signalling server.

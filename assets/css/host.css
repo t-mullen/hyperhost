@@ -1,10 +1,11 @@
 body,html {
     font-family: Arial;
     text-align: center;
-    background: white;
+    background: black;
     padding: 0;
     margin: 0;
     transition: background .3s linear;
+    color:  #1784FB;
 }
 
 .container{
@@ -19,7 +20,6 @@ body,html {
 h1 {
     font-size: 40px;
     margin-bottom: 0;
-    color: #1784FB;
 }
 
 h3 {
