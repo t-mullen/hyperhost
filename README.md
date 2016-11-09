@@ -113,7 +113,7 @@ host.io.contentTree([
 **Current Limitations:**  
 - Any Node modules used must be Browserify-able.  
 - The host must be running Chrome. The client can be [any browser supporting WebRTC](http://caniuse.com/#feat=rtcpeerconnection).
-- Very large pages, can freeze up when clients attempt to load them. 
+- Very large pages can freeze up when clients attempt to load them. 
 - Relative URLs pointing to hosted files inside **Javascript** files will not work. (JS cannot easily be refactored, an API for allowing this is forthcoming)
 - The **require** method only supports module *names* and not *paths*. `require('custom')`, not `require('./custom')`. (Use Browserify before uploading if you need this behaviour)
 
