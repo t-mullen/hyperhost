@@ -6,16 +6,32 @@ body,html {
     margin: 0;
     transition: background .3s linear;
     color:  #1784FB;
+    overflow: hidden;
 }
 
 .container{
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    right: 20px;
-    bottom: 20px;
-    border: dashed #1784FB 7px;
+    display: inline-block;
+    margin-top: 80px;
+    width: 300px;
+    height: 300px;
+    border: solid #1784FB 3px;
+    padding: 20px;
+    border-radius: 50%;
+    position: relative;
 }
+
+.loader {
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    height: 100%;
+    width: 100%;
+    border-top: solid white 6px;
+    border-radius: 50%;
+    animation: spin 5s linear infinite;
+    pointer-events: none;
+}
+
 
 h1 {
     font-size: 40px;
@@ -30,20 +46,50 @@ p {
     font-size: 20px;
 }
 
-.header {
+.result {
+    pointer-events: all;
+}
+
+a, a:visited, a:active{
+    color: #1784FB;
+    font-size: 14px;
+    word-wrap:break-word;
+    cursor: pointer;
+    z-index: 20;
+}
+
+a:hover {
+    color: white;
+}
+
+.header, .result {
     margin-top: 50px;
 }
 
 
 /* Small Devices, Tablets */
 @media only screen and (min-width : 768px) {
+    .container {
+        width: 500px;
+        height: 500px;
+        padding: 50px;
+    }
+    .header, .result {
+        margin-top: 110px;
+    }
     h1 {
         font-size: 70px;
     }
     h3 {
-    font-size: 30px;
+        font-size: 30px;
     }
     p {
         font-size: 24px;
     }
+}
+
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

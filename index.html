@@ -4,6 +4,7 @@
     </head>
     <body>
         <div class="container">
+            <div class="loader"></div>
             <div class="header">
                 <h1><i>HyperHost</i></h1>
                 <h3>Instant P2P Hosting</h3>
@@ -30,12 +31,14 @@
             event.stopPropagation();
             event.preventDefault();
             document.body.style.color='';
+            document.querySelector('.loader').style.animation='spin .5s linear infinite';
         
             // Creates a new HH instance and connects to the signalling server.
             var host = new HyperHost();
 
             // Listen for a client url, then open a new window with our client
             host.on('ready', function(url){
+                document.querySelector('.header').style.display='none';
                 document.querySelector('.result').style.display='';
                 document.querySelector('.result a').innerHTML=url;
                 document.querySelector('.result a').href=url;
