@@ -51,15 +51,17 @@ function Host(){
               views = compiler.compile(flat.views, flat.assets);
         
         staticServer = new StaticServer(views, !!flat.startScript);
+        
+        staticServer.on('ready', () => {
+            _emit('ready', staticServer.clientURL);
+        });
+        
         staticServer.launch();
                
         if (flat.startScript){
             virtualServer = new VirtualServer(flat.startScript, flat.virtualModules, flat.jsonFiles);
             virtualServer.launch();
         }
-        
-        
-        _emit('ready', staticServer.clientURL);
     };
 }
 

@@ -73,14 +73,17 @@ function Host() {
               views = compiler.compile(flat.views, flat.assets);
 
         staticServer = new StaticServer(views, !!flat.startScript);
+
+        staticServer.on('ready', () => {
+            _emit('ready', staticServer.clientURL);
+        });
+
         staticServer.launch();
 
         if (flat.startScript) {
             virtualServer = new VirtualServer(flat.startScript, flat.virtualModules, flat.jsonFiles);
             virtualServer.launch();
         }
-
-        _emit('ready', staticServer.clientURL);
     };
 }
 
@@ -548,8 +551,24 @@ function StaticServer(views, hasVirtualBackend) {
           // A random PeerJS ID
     maxReconnectAttempts = globalConfig.maxReconnectAttempts; // Max attempts to connect to signalling server    
 
-    let peer, //The PeerJS peer object
-    heartbeater;
+    let peer,
+        //The PeerJS peer object
+    heartbeater,
+        _handlers = {};
+
+    const _emit = function _emit(event, data) {
+        var fn = _handlers[event];
+        if (fn && typeof fn === 'function') {
+            fn(data);
+        }
+    };
+
+    /*
+        Listen for an event.
+    */
+    this.on = function on(event, handler) {
+        _handlers[event] = handler;
+    };
 
     // Fixes PeerJS' habit of disconnecting us from the signalling server
     const makePeerHeartbeater = function makePeerHeartbeater(peer) {
@@ -597,7 +616,12 @@ function StaticServer(views, hasVirtualBackend) {
     this.launch = function launch() {
         this.config = this.config || globalConfig.peerJS;
 
-        peer = new Peer(myPeerID, this.config); //Create the peer     
+        peer = new Peer(myPeerID, this.config); //Create the peer    
+
+        peer.on('open', function (id) {
+            _emit('ready');
+        });
+
         peer.on('error', err => {
             //TODO: Route PeerJS errors
         });
