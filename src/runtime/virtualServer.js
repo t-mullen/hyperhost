@@ -26,7 +26,7 @@ function VirtualServer(startScript, modules, jsonFiles) {
     
     
     //Gets a Wzrd.in url from module name
-    getWzrdModuleUrl = function getWzrdModuleUrl(name, version) {
+    const getWzrdModuleUrl = function getWzrdModuleUrl(name, version) {
         return config.paths.wzrd + name + jsonFiles['package']['dependencies'][name] + (!!version ? '@' + version : '');
     };
     
