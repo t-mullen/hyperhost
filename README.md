@@ -102,7 +102,7 @@ host.io.contentTree([
 ]);
 ```
 
-##Great for demos and hackathons!
+## Great for demos and hackathons!
 
 **Upcoming Features:**  
 - Distributed hosting - Allow clients to opt-in to helping you host the site via a mesh network.  
