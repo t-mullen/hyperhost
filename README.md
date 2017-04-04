@@ -9,17 +9,20 @@
 <h4 align="center">Peer-To-Peer Node Servers in the Browser.</h4>
 <br>
 
+### Demo
 Drag and drop your website (with at least an **index.html**) into https://rationalcoding.github.io/HyperHost/.  
 It will be instantly served ***from your browser*** via WebRTC.
 
 ### Node Servers
-HyperHost emulates Node.js servers.
+HyperHost emulates a Node server in your browser by replacing HTTP requests with WebRTC connections.  
+This, along with the huge number of [Browserified](https://github.com/substack/node-browserify) Node modules, allows you to run a full server from your browser.  
 
 Drag and drop a folder containing a file an **index.html** and a **HH-server.js**.
 Inside **HH-server.js**, you can put your Node start script.  
 
 Example of a **HH-server.js**:
 ```javascript
+// HyperHost gives you access to a Node-like 'require'
 var hyperhost = require('hyperhost'); // This special module lets us handle WebRTC connections (it's like Express)
 var fs = require('browserify-fs');    // require any module that can be Browserified
 var custom = require('custom');       // require custom modules that you upload with the "HH-" prefix (ie HH-custom.js"
@@ -44,7 +47,7 @@ app.listen();
 
 ### Pull from NPM
 
-You can pull NPM modules by adding a **package.json**:
+You can pull NPM modules via [WZRD](https://wzrd.in/) by adding a **package.json**:
 ```javascript
 {
   "name": "MyNodeApp",
@@ -57,8 +60,8 @@ You can pull NPM modules by adding a **package.json**:
 
 ### Client Code
 
-Calls to this Node server can be made from the pages being hosted.  
-**hyperclient.js** provides the `HyperRequest` object, similar to the `XMLHttpRequest` object.
+Calls to this Node server can only be made from the pages being hosted. (Think of it like CORS)  
+Including **hyperclient.js** in your hosted files provides the `HyperRequest` object, similar to the `XMLHttpRequest` object.  
 ```javascript
 //Here is an example request
 var hyp = HyperRequest(); //Create a new HyperRequest
@@ -74,9 +77,18 @@ hyp.send({ //Send arbitrary data to server
 });
 ```
 
-### Integrate
+### How It Works
+First, the files you upload are read and seperated into static assets (images, HTML, CSS, etc) and server code (Javascript with the "HH-" prefix, or a package.json).  
 
-The service at https://rationalcoding.github.io/HyperHost/ is just one use-case of HyperHost.  
+The static assets are base64 encoded and bundled into a single large file (with some exra scripts for page changing). The server code is injected into the host page, along with any external NPM modules. The server is now running.  
+
+When a client connects, they first connect to a signalling server, which helps with the creation of a WebRTC connection to the host page. When a connection is established, the static resource bundle is sent over it and the client displays it.  
+
+The same connection is used to handle any subsequent requests to the host (by way of the HyperRequest object). These requests are forwarded to the server code that was already injected, and the response comes back the same way.  
+
+### Custom Usage
+
+The demo at https://rationalcoding.github.io/HyperHost/ is just one use-case of HyperHost.  
 You can easily integrate instant hosting over WebRTC into any project.  
 ```javascript
 var host = new HyperHost(); // Create a new HyperHost instance
@@ -120,4 +132,4 @@ host.io.contentTree([
 **Notes:**  
 You can host the files in this repo anywhere (even on a file:// domain!) if you don't want to use Github's servers for the initial resources. You can also use any PeerJS signalling server (with the addition of a `/api/peers` route that returns all peer IDs)
 
-### [MULTIHACK](https://rationalcoding.github.io/multihack-web) is a web-based IDE that uses HyperHost to deploy your project even faster!
+### [MULTIHACK](https://rationalcoding.github.io/multihack-web) is a web-based editor that uses HyperHost to deploy your project even faster!
