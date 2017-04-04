@@ -80,7 +80,7 @@ hyp.send({ //Send arbitrary data to server
 ### How It Works
 First, the files you upload are read and seperated into static assets (images, HTML, CSS, etc) and server code (Javascript with the "HH-" prefix, or a package.json).  
 
-The static assets are base64 encoded and bundled into a single large file (with some exra scripts for page changing). The server code is injected into the host page, along with any external NPM modules. The server is now running.  
+The static assets are base64 encoded and bundled into a single large file (with some extra scripts for changing page). The server code is injected into the host page, along with any external NPM modules. The server is now running.  
 
 When a client connects, they first connect to a signalling server, which helps with the creation of a WebRTC connection to the host page. When a connection is established, the static resource bundle is sent over it and the client displays it.  
 
