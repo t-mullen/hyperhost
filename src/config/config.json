@@ -1,6 +1,6 @@
 {
     paths : {
-        client : "https://rationalcoding.github.io/HyperHost/client.html?site=",
+        client : "https://rationalcoding.github.io/hyperhost/client.html?site=",
         wzrd : "https://tmullen-bcdn.herokuapp.com/debug-standalone/",
         crossOriginProxy : "https://crossorigin.me/"
     },
