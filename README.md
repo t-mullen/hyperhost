@@ -23,7 +23,7 @@ Inside **HH-server.js**, you can put your Node start script.
 Example of a **HH-server.js**:
 ```javascript
 // HyperHost gives you access to a Node-like 'require'
-var hyperhost = require('hyperhost'); // This special module lets us handle WebRTC connections (it's like Express)
+var hyperhost = require('hyperhost'); // This special module lets us handle WebRTC connections
 var fs = require('browserify-fs');    // require any module that can be Browserified
 var custom = require('custom');       // require custom modules that you upload with the "HH-" prefix (ie HH-custom.js"
 
