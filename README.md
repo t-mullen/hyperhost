@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://rationalcoding.github.io/HyperHost/"><img src="https://s12.postimg.org/6asslh8hp/HH_logo.png" alt="HyperHost" width="200"></a>
+  <a href="https://rationalcoding.github.io/hyperhost/"><img src="https://s12.postimg.org/6asslh8hp/HH_logo.png" alt="HyperHost" width="200"></a>
   <br>
   HyperHost
   <br>
@@ -10,7 +10,7 @@
 <br>
 
 ### Demo
-Drag and drop your website (with at least an **index.html**) into https://rationalcoding.github.io/HyperHost/.  
+Drag and drop your website (with at least an **index.html**) into https://rationalcoding.github.io/hyperhost/.  
 It will be instantly served ***from your browser*** via WebRTC.
 
 ### Node Servers
@@ -88,7 +88,7 @@ The same connection is used to handle any subsequent requests to the host (by wa
 
 ### Custom Usage
 
-The demo at https://rationalcoding.github.io/HyperHost/ is just one use-case of HyperHost.  
+The demo at https://rationalcoding.github.io/hyperhost/ is just one use-case.  
 You can easily integrate instant hosting over WebRTC into any project.  
 ```javascript
 var host = new HyperHost(); // Create a new HyperHost instance
