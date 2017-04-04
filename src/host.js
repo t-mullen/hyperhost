@@ -2,68 +2,64 @@
 Copyright (c) 2016 Thomas Mullen. All rights reserved.
 MIT License
 
-
 HyperHost v2.0
 Module to host websites over WebRTC.
-
 
 */
 
 const IO = require('./processing/io.js'),
-      Flattener = require('./processing/flattener.js'),
-      Compiler = require('./processing/compiler.js'),
+  Flattener = require('./processing/flattener.js'),
+  Compiler = require('./processing/compiler.js'),
 
-      StaticServer = require('./runtime/staticServer.js'),
-      VirtualServer = require('./runtime/virtualServer.js');
+  StaticServer = require('./runtime/staticServer.js'),
+  VirtualServer = require('./runtime/virtualServer.js')
 
-function Host(){
-    'use strict';
-    
-    this.io = new IO();
-    
-    let staticServer,
-        virtualServer,
-        _handlers = {};
-    
-    const flattener = new Flattener(),
-          compiler = new Compiler(),
-    
-          
-    _emit = function _emit(event, data){
-        var fn = _handlers[event];
-        if (fn && typeof(fn) === 'function') {
-            fn(data);
-        }
-    };
-    
+function Host () {
+  'use strict'
+
+  this.io = new IO()
+
+  let staticServer,
+    virtualServer,
+    _handlers = {}
+
+  const flattener = new Flattener(),
+    compiler = new Compiler(),
+
+    _emit = function _emit (event, data) {
+      var fn = _handlers[event]
+      if (fn && typeof (fn) === 'function') {
+        fn(data)
+      }
+    }
+
     /*
         Listen for an event.
     */
-    this.on = function on(event, handler) {
-        _handlers[event]=handler;
-    };
+  this.on = function on (event, handler) {
+    _handlers[event] = handler
+  }
 
     /*
         Launch the server.
     */
-    this.launch = function launch() {
-        const flat = flattener.flatten(this.io.getContentTree()),
-              views = compiler.compile(flat.views, flat.assets);
-        
-        staticServer = new StaticServer(views, !!flat.startScript);
-        
-        staticServer.on('ready', () => {
-            _emit('ready', staticServer.clientURL);
-        });
-        
-        staticServer.launch();
-               
-        if (flat.startScript){
-            virtualServer = new VirtualServer(flat.startScript, flat.virtualModules, flat.jsonFiles);
-            virtualServer.launch();
-        }
-    };
+  this.launch = function launch () {
+    const flat = flattener.flatten(this.io.getContentTree()),
+      views = compiler.compile(flat.views, flat.assets)
+
+    staticServer = new StaticServer(views, !!flat.startScript)
+
+    staticServer.on('ready', () => {
+      _emit('ready', staticServer.clientURL)
+    })
+
+    staticServer.launch()
+
+    if (flat.startScript) {
+      virtualServer = new VirtualServer(flat.startScript, flat.virtualModules, flat.jsonFiles)
+      virtualServer.launch()
+    }
+  }
 }
 
-
-module.exports = Host;
+module.exports = Host

@@ -27,10 +27,8 @@ module.exports={
 Copyright (c) 2016 Thomas Mullen. All rights reserved.
 MIT License
 
-
 HyperHost v2.0
 Module to host websites over WebRTC.
-
 
 */
 
@@ -41,50 +39,50 @@ const IO = require('./processing/io.js'),
       VirtualServer = require('./runtime/virtualServer.js');
 
 function Host() {
-    'use strict';
+  'use strict';
 
-    this.io = new IO();
+  this.io = new IO();
 
-    let staticServer,
-        virtualServer,
-        _handlers = {};
+  let staticServer,
+      virtualServer,
+      _handlers = {};
 
-    const flattener = new Flattener(),
-          compiler = new Compiler(),
-          _emit = function _emit(event, data) {
-        var fn = _handlers[event];
-        if (fn && typeof fn === 'function') {
-            fn(data);
-        }
-    };
+  const flattener = new Flattener(),
+        compiler = new Compiler(),
+        _emit = function _emit(event, data) {
+    var fn = _handlers[event];
+    if (fn && typeof fn === 'function') {
+      fn(data);
+    }
+  };
 
-    /*
-        Listen for an event.
-    */
-    this.on = function on(event, handler) {
-        _handlers[event] = handler;
-    };
+  /*
+      Listen for an event.
+  */
+  this.on = function on(event, handler) {
+    _handlers[event] = handler;
+  };
 
-    /*
-        Launch the server.
-    */
-    this.launch = function launch() {
-        const flat = flattener.flatten(this.io.getContentTree()),
-              views = compiler.compile(flat.views, flat.assets);
+  /*
+      Launch the server.
+  */
+  this.launch = function launch() {
+    const flat = flattener.flatten(this.io.getContentTree()),
+          views = compiler.compile(flat.views, flat.assets);
 
-        staticServer = new StaticServer(views, !!flat.startScript);
+    staticServer = new StaticServer(views, !!flat.startScript);
 
-        staticServer.on('ready', () => {
-            _emit('ready', staticServer.clientURL);
-        });
+    staticServer.on('ready', () => {
+      _emit('ready', staticServer.clientURL);
+    });
 
-        staticServer.launch();
+    staticServer.launch();
 
-        if (flat.startScript) {
-            virtualServer = new VirtualServer(flat.startScript, flat.virtualModules, flat.jsonFiles);
-            virtualServer.launch();
-        }
-    };
+    if (flat.startScript) {
+      virtualServer = new VirtualServer(flat.startScript, flat.virtualModules, flat.jsonFiles);
+      virtualServer.launch();
+    }
+  };
 }
 
 module.exports = Host;
@@ -100,125 +98,122 @@ Injects encoded assets and subviews into views.
 const util = require('../util/util.js');
 
 function Compiler() {
-    'use strict';
+  'use strict';
 
-    // Inject assets into views
+  // Inject assets into views
 
-    const injectAssets = function injectAssets(views, assets) {
-        let i, i2, regex;
-        i = views.length;
-        while (i--) {
-            i2 = assets.length;
-            while (i2--) {
-
-                if (views[i].isRoot) {
-                    //Find instances of the path name and replace with encoded content
-                    regex = new RegExp('(.\/|)' + util.escapeRegex(assets[i2].old), 'g');
-                    views[i].content = views[i].content.replace(regex, assets[i2].new);
-                } else if (views[i].extension === 'css') {
-
-                    //Relaxes exact path matching for CSS files (only name match is required)
-                    regex = new RegExp('url\(([^)]*)(.\/|)' + util.escapeRegex(assets[i2].name) + '([^)]*)\)', 'g');
-                    views[i].content = views[i].content.replace(regex, 'url(' + assets[i2].new);
-                } else {
-                    /*
-                    TODO: Support relative paths in more than just stylesheets.
-                     Javascript may have many false matches.
-                    Other types are completely unknown.
-                    */
-                }
-            }
+  const injectAssets = function injectAssets(views, assets) {
+    let i, i2, regex;
+    i = views.length;
+    while (i--) {
+      i2 = assets.length;
+      while (i2--) {
+        if (views[i].isRoot) {
+          // Find instances of the path name and replace with encoded content
+          regex = new RegExp('(.\/|)' + util.escapeRegex(assets[i2].old), 'g');
+          views[i].content = views[i].content.replace(regex, assets[i2].new);
+        } else if (views[i].extension === 'css') {
+          // Relaxes exact path matching for CSS files (only name match is required)
+          regex = new RegExp('url\(([^)]*)(.\/|)' + util.escapeRegex(assets[i2].name) + '([^)]*)\)', 'g');
+          views[i].content = views[i].content.replace(regex, 'url(' + assets[i2].new);
+        } else {
+          /*
+          TODO: Support relative paths in more than just stylesheets.
+           Javascript may have many false matches.
+          Other types are completely unknown.
+          */
         }
-    },
+      }
+    }
+  },
 
 
-    // Inject subsviews into views
-    injectViews = function injectViews(views) {
-        let i, i2, regex, navScript;
+  // Inject subsviews into views
+  injectViews = function injectViews(views) {
+    let i, i2, regex, navScript;
 
-        i = views.length;
-        while (i--) {
-            if (views[i].isInvalid) continue;
-            if (views[i].extension !== 'html') continue; //Subviews only make sense for HTML
+    i = views.length;
+    while (i--) {
+      if (views[i].isInvalid) continue;
+      if (views[i].extension !== 'html') continue; // Subviews only make sense for HTML
 
-            i2 = views.length;
-            while (i2--) {
-                if (views[i2].isInvalid) continue;
+      i2 = views.length;
+      while (i2--) {
+        if (views[i2].isInvalid) continue;
 
-                switch (views[i2].extension) {
+        switch (views[i2].extension) {
 
-                    case 'css':
-                        // External CSS files are replaced by embedded stylesheets
-                        regex = new RegExp("<link.*rel\\s*=\\s*[\"']stylesheet[\"'].*href\\s*=\\s*[\"'](.\/|)" + util.escapeRegex(views[i2].path) + "[\"'].*>", 'g');
-                        views[i].content = views[i].content.replace(regex, '<style>' + views[i2].content + '</style>');
+          case 'css':
+            // External CSS files are replaced by embedded stylesheets
+            regex = new RegExp("<link.*rel\\s*=\\s*[\"']stylesheet[\"'].*href\\s*=\\s*[\"'](.\/|)" + util.escapeRegex(views[i2].path) + "[\"'].*>", 'g');
+            views[i].content = views[i].content.replace(regex, '<style>' + views[i2].content + '</style>');
 
-                        break;
+            break;
 
-                    case 'html':
-                        // Links to internal HTML files are replaced via navigation scripts
-                        regex = new RegExp("href\\s*=\\s*['\"](.\/|)" + util.escapeRegex(views[i2].path) + "(#[^'\"]*['\"]|['\"])", 'g');
+          case 'html':
+            // Links to internal HTML files are replaced via navigation scripts
+            regex = new RegExp("href\\s*=\\s*['\"](.\/|)" + util.escapeRegex(views[i2].path) + "(#[^'\"]*['\"]|['\"])", 'g');
 
-                        navScript = `href='#' onclick="event.preventDefault();var parent=window.parent;var event = new CustomEvent('hypermessage', {detail: {type: 'navigate',path:'` + views[i2].path + `'}});parent.dispatchEvent(event)"`;
+            navScript = `href='#' onclick="event.preventDefault();var parent=window.parent;var event = new CustomEvent('hypermessage', {detail: {type: 'navigate',path:'` + views[i2].path + `'}});parent.dispatchEvent(event)"`;
 
-                        views[i].content = views[i].content.replace(regex, navScript);
+            views[i].content = views[i].content.replace(regex, navScript);
 
-                        break;
+            break;
 
-                    default:
-                        //TODO support other kinds of injectable views (are there any?)
-                        continue;
-                }
-            }
+          default:
+            // TODO support other kinds of injectable views (are there any?)
+            continue;
         }
-    },
+      }
+    }
+  },
 
 
-    // Replaces hash links with scrolling scripts
-    replaceHashLinks = function replaceHashLinks(views) {
-        let i, i2, regex, regex2, regex3, matches, anchorID;
+  // Replaces hash links with scrolling scripts
+  replaceHashLinks = function replaceHashLinks(views) {
+    let i, i2, regex, regex2, regex3, matches, anchorID;
 
-        i = views.length;
-        while (i--) {
-            if (views[i].isInvalid) continue;
-            if (views[i].extension !== 'html') continue;
+    i = views.length;
+    while (i--) {
+      if (views[i].isInvalid) continue;
+      if (views[i].extension !== 'html') continue;
 
-            // Replace hash links
+      // Replace hash links
 
-            // Get all href attributes that begin with a hash
-            regex = new RegExp("href\\s*=\\s*['\"](.\/|)\\s*#[^'\"]+['\"]", 'g');
-            matches = views[i].content.match(regex);
+      // Get all href attributes that begin with a hash
+      regex = new RegExp("href\\s*=\\s*['\"](.\/|)\\s*#[^'\"]+['\"]", 'g');
+      matches = views[i].content.match(regex);
 
-            if (matches !== null) {
-                i2 = matches.length;
-                while (i2--) {
+      if (matches !== null) {
+        i2 = matches.length;
+        while (i2--) {
+          // Get the actual name (without the #)
+          regex2 = new RegExp("#[^'\"]+['\"]", 'g');
+          anchorID = matches[i2].match(regex2)[0];
+          anchorID = anchorID.substr(1, anchorID.length - 2);
 
-                    // Get the actual name (without the #)
-                    regex2 = new RegExp("#[^'\"]+['\"]", 'g');
-                    anchorID = matches[i2].match(regex2)[0];
-                    anchorID = anchorID.substr(1, anchorID.length - 2);
+          // Get the full href again
+          regex3 = new RegExp("href\\s*=\\s*['\"](.\/|)\\s*#" + util.escapeRegex(anchorID) + "['\"]", 'g');
 
-                    // Get the full href again
-                    regex3 = new RegExp("href\\s*=\\s*['\"](.\/|)\\s*#" + util.escapeRegex(anchorID) + "['\"]", 'g');
-
-                    //Inject a script to control scrolling
-                    //TODO: Is this the best solution?
-                    views[i].content = views[i].content.replace(regex3, `href="#" onclick="event.preventDefault(); document.getElementById('` + anchorID + `').scrollIntoView();"`);
-                }
-            }
+          // Inject a script to control scrolling
+          // TODO: Is this the best solution?
+          views[i].content = views[i].content.replace(regex3, `href="#" onclick="event.preventDefault(); document.getElementById('` + anchorID + `').scrollIntoView();"`);
         }
-    };
+      }
+    }
+  };
 
-    /*
-        Accepts an array of views and an array of pre-encoded assets.
-        Compiles these views in-place.
-        Returns the array of compiled views.
-    */
-    this.compile = function compile(views, assets) {
-        injectAssets(views, assets);
-        injectViews(views);
-        replaceHashLinks(views);
-        return views;
-    };
+  /*
+      Accepts an array of views and an array of pre-encoded assets.
+      Compiles these views in-place.
+      Returns the array of compiled views.
+  */
+  this.compile = function compile(views, assets) {
+    injectAssets(views, assets);
+    injectViews(views);
+    replaceHashLinks(views);
+    return views;
+  };
 }
 
 module.exports = Compiler;
@@ -229,7 +224,6 @@ Copyright (c) 2016 Thomas Mullen. All rights reserved.
 MIT License
 
 Flattens the content tree into two arrays of views and assets.
-
 
 The content tree has the following example structure:
 
@@ -255,132 +249,129 @@ const util = require('../util/util.js'),
       config = require('../config/config.json');
 
 function Flattener() {
-    'use strict';
+  'use strict';
 
-    let views, assets, startScript, virtualModules, jsonFiles, foundIndex;
+  let views, assets, startScript, virtualModules, jsonFiles, foundIndex;
 
-    const pushFile = function pushFile(path, item, isRoot) {
-        const ext = util.nameToExtension(item.name);
+  const pushFile = function pushFile(path, item, isRoot) {
+    const ext = util.nameToExtension(item.name);
 
-        // Views must not be encoded!
-        if (util.contains(config.extensions.view, ext)) {
+    // Views must not be encoded!
+    if (util.contains(config.extensions.view, ext)) {
+      if (path + item.name === 'index.html') {
+        // Find the root HTML page
+        foundIndex = true;
+      }
 
-            if (path + item.name === 'index.html') {
-                // Find the root HTML page
-                foundIndex = true;
-            }
+      if (ext === 'json') {
+        jsonFiles[path + item.name.split('.')[0]] = JSON.parse(item.content); // JSON files are reserved for the server. If you need them in client, use a virtual backend to serve them
+      } else {
+        views.push({
+          content: item.content,
+          path: path + item.name,
+          extension: ext,
+          isRoot: isRoot
+        });
+      }
+    }
 
-            if (ext === 'json') {
-                jsonFiles[path + item.name.split('.')[0]] = JSON.parse(item.content); //JSON files are reserved for the server. If you need them in client, use a virtual backend to serve them
-            } else {
-                views.push({
-                    content: item.content,
-                    path: path + item.name,
-                    extension: ext,
-                    isRoot: isRoot
-                });
-            }
-        }
+    // Should not be encoded initially, but we will encode them
+    else if (util.contains(config.extensions.text, ext)) {
+        const dataURI = item.dataURI || util.toDataURI(item.content, util.nameToExtension(item.name));
 
-        // Should not be encoded initially, but we will encode them
-        else if (util.contains(config.extensions.text, ext)) {
-                const dataURI = item.dataURI || util.toDataURI(item.content, util.nameToExtension(item.name));
-
-                if (item.name.substring(0, 3) === 'HH-') {
-                    if (item.name === 'HH-server.js') {
-                        // Virtual server start file
-                        startScript = dataURI;
-                    } else {
-                        //Virtual server module
-                        const name = item.name.substring(3).slice(0, -3);
-                        virtualModules[name] = dataURI;
-                    }
-                } else {
-                    assets.push({
-                        old: path + item.name,
-                        new: dataURI,
-                        extension: ext,
-                        name: item.name,
-                        isFont: false
-                    });
-                }
-            }
-
-            //Misc files should always be encoded
-            else {
-                    const dataURI = item.dataURI || util.toDataURI(item.content, util.nameToExtension(item.name)),
-                          isFont = util.contains(config.extensions.image, ext); // Identify fonts
-
-                    assets.push({
-                        old: path + item.name,
-                        new: dataURI,
-                        extension: ext,
-                        name: item.name,
-                        isFont: isFont
-                    });
-                }
-    },
-
-
-    // Traverses an item of unknown type in the content tree
-    traverseFileTree = function traverseFileTree(item, path, depth, ancestors) {
-        if (item.name[0] === '.' || item.isRemoved) return; //Ignore hidden files
-
-        if (!item.nodes) {
-            //No child node array, must be a file
-            pushFile(path, item, depth <= 1);
+        if (item.name.substring(0, 3) === 'HH-') {
+          if (item.name === 'HH-server.js') {
+            // Virtual server start file
+            startScript = dataURI;
+          } else {
+            // Virtual server module
+            const name = item.name.substring(3).slice(0, -3);
+            virtualModules[name] = dataURI;
+          }
         } else {
-
-            // Recursively traverse folder
-            for (let i = 0; i < item.nodes.length; i++) {
-                const newPath = path + item.name + '/',
-                      newAncestors = ancestors.slice(0);
-                newAncestors.push(item.name);
-
-                traverseFileTree(item.nodes[i], newPath, depth + 1, newAncestors);
-            }
+          assets.push({
+            old: path + item.name,
+            new: dataURI,
+            extension: ext,
+            name: item.name,
+            isFont: false
+          });
         }
+      }
+
+      // Misc files should always be encoded
+      else {
+          const dataURI = item.dataURI || util.toDataURI(item.content, util.nameToExtension(item.name)),
+                isFont = util.contains(config.extensions.image, ext); // Identify fonts
+
+          assets.push({
+            old: path + item.name,
+            new: dataURI,
+            extension: ext,
+            name: item.name,
+            isFont: isFont
+          });
+        }
+  },
+
+
+  // Traverses an item of unknown type in the content tree
+  traverseFileTree = function traverseFileTree(item, path, depth, ancestors) {
+    if (item.name[0] === '.' || item.isRemoved) return; // Ignore hidden files
+
+    if (!item.nodes) {
+      // No child node array, must be a file
+      pushFile(path, item, depth <= 1);
+    } else {
+      // Recursively traverse folder
+      for (let i = 0; i < item.nodes.length; i++) {
+        const newPath = path + item.name + '/',
+              newAncestors = ancestors.slice(0);
+        newAncestors.push(item.name);
+
+        traverseFileTree(item.nodes[i], newPath, depth + 1, newAncestors);
+      }
+    }
+  };
+
+  /*
+  Flattens a content tree and returns the result.
+  Returns an object containing :
+  an array of views,
+  an array of assets,
+  a virtual server start script (if one exists),
+  a dictionary of virtual modules,
+  a dictionary of json files.
+  */
+  this.flatten = function flatten(tree) {
+    // Reset working variables
+    views = [];
+    assets = [];
+    virtualModules = {};
+    foundIndex = false;
+    jsonFiles = {
+      package: {
+        dependencies: {}
+      }
     };
 
-    /*  
-    Flattens a content tree and returns the result.
-     Returns an object containing :
-    an array of views,
-    an array of assets, 
-    a virtual server start script (if one exists), 
-    a dictionary of virtual modules,
-    a dictionary of json files.
-    */
-    this.flatten = function flatten(tree) {
+    // Iterate across root level of tree
+    for (let i = 0; i < tree.length; i++) {
+      traverseFileTree(tree[i], '', 0, []);
+    }
 
-        //Reset working variables
-        views = [];
-        assets = [];
-        virtualModules = {};
-        foundIndex = false;
-        jsonFiles = {
-            package: {
-                dependencies: {}
-            }
-        };
+    if (!foundIndex) {
+      throw new Error('No index.html in root level of content tree.');
+    }
 
-        // Iterate across root level of tree
-        for (let i = 0; i < tree.length; i++) {
-            traverseFileTree(tree[i], '', 0, []);
-        }
-
-        if (!foundIndex) {
-            throw new Error('No index.html in root level of content tree.');
-        }
-
-        return {
-            views,
-            assets,
-            startScript,
-            virtualModules,
-            jsonFiles
-        };
+    return {
+      views,
+      assets,
+      startScript,
+      virtualModules,
+      jsonFiles
     };
+  };
 }
 
 module.exports = Flattener;
@@ -397,138 +388,137 @@ const util = require('../util/util.js'),
       config = require('../config/config.json');
 
 function IO() {
-    'use strict';
+  'use strict';
 
-    let contentTree = { nodes: [] };
+  let contentTree = { nodes: [] };
 
-    let _handlers = {};
-    const _emit = function _emit(event, data) {
-        var fn = _handlers[event];
-        if (fn && typeof fn === 'function') {
-            fn(data);
+  let _handlers = {};
+  const _emit = function _emit(event, data) {
+    var fn = _handlers[event];
+    if (fn && typeof fn === 'function') {
+      fn(data);
+    }
+  };
+
+  let remainingFiles = 0,
+      // For tracking async load
+  traversalComplete; //
+
+  // Traverses and loads a webkitEntry
+  const traverseWebkitEntry = function travserseWebkitEntry(entry, ancestors, callback) {
+    if (entry.isFile) {
+      entry.file(function (file) {
+        let fileReader = new FileReader(),
+            extension = entry.name.split('.');
+        extension = extension[extension.length - 1].toLowerCase();
+
+        remainingFiles++;
+        fileReader.addEventListener('load', () => {
+          util.deepSetTree(contentTree, {
+            name: entry.name,
+            content: fileReader.result
+          }, ancestors);
+
+          // Check for completion
+          remainingFiles--;
+          if (remainingFiles === 0 && traversalComplete) {
+            callback();
+          }
+        });
+
+        if (config.extensions.view.indexOf(extension) !== -1) {
+          // Views must remain text
+          fileReader.readAsText(file);
+        } else {
+          // Everything else must be base64
+          fileReader.readAsDataURL(file);
         }
-    };
+      }, function (err) {
+        console.error(err);
+      });
+    } else if (entry.isDirectory) {
+      util.deepSetTree(contentTree, {
+        name: entry.name,
+        nodes: []
+      }, ancestors);
 
-    let remainingFiles = 0,
-        // For tracking async load
-    traversalComplete; //
-
-    // Traverses and loads a webkitEntry
-    const traverseWebkitEntry = function travserseWebkitEntry(entry, ancestors, callback) {
-        if (entry.isFile) {
-
-            entry.file(function (file) {
-                let fileReader = new FileReader(),
-                    extension = entry.name.split('.');
-                extension = extension[extension.length - 1].toLowerCase();
-
-                remainingFiles++;
-                fileReader.addEventListener('load', () => {
-                    util.deepSetTree(contentTree, {
-                        name: entry.name,
-                        content: fileReader.result
-                    }, ancestors);
-
-                    // Check for completion
-                    remainingFiles--;
-                    if (remainingFiles === 0 && traversalComplete) {
-                        callback();
-                    }
-                });
-
-                if (config.extensions.view.indexOf(extension) !== -1) {
-                    // Views must remain text
-                    fileReader.readAsText(file);
-                } else {
-                    // Everything else must be base64
-                    fileReader.readAsDataURL(file);
-                }
-            }, function (err) {
-                console.error(err);
-            });
-        } else if (entry.isDirectory) {
-            util.deepSetTree(contentTree, {
-                name: entry.name,
-                nodes: []
-            }, ancestors);
-
-            let dirReader = entry.createReader();
-            dirReader.readEntries(entries => {
-                for (var i = 0; i < entries.length; i++) {
-                    let newAncestors = ancestors.slice(0); // Clone ancestors array
-                    newAncestors.push(entry.name);
-                    traverseWebkitEntry(entries[i], newAncestors, callback);
-                }
-            });
+      let dirReader = entry.createReader();
+      dirReader.readEntries(entries => {
+        for (var i = 0; i < entries.length; i++) {
+          let newAncestors = ancestors.slice(0); // Clone ancestors array
+          newAncestors.push(entry.name);
+          traverseWebkitEntry(entries[i], newAncestors, callback);
         }
-    };
+      });
+    }
+  };
 
-    /*
-        Listen for an event.
-    */
-    this.on = function on(event, handler) {
-        _handlers[event] = handler;
-    };
+  /*
+      Listen for an event.
+  */
+  this.on = function on(event, handler) {
+    _handlers[event] = handler;
+  };
 
-    this.getContentTree = function () {
-        return contentTree;
-    };
+  this.getContentTree = function () {
+    return contentTree;
+  };
 
-    /*
-    Consumes a content tree directly.
-    */
-    this.contentTree = function (contentTree) {
-        contentTree = contentTree;
-        _emit('digest', {});
-    };
+  /*
+  Consumes a content tree directly.
+  */
+  this.contentTree = function (newContentTree) {
+    contentTree = newContentTree;
+    _emit('digest', {});
+  };
 
-    /*
-    Builds a true content tree from a tree containing File objects.
-    */
-    this.fileTree = function (fileTree) {
-        throw new Error('Not implemented'); //TODO
-    };
+  /*
+  Builds a true content tree from a tree containing File objects.
+  */
+  this.fileTree = function (fileTree) {
+    throw new Error('Not implemented'); // TODO
+  };
 
-    /*
-    Builds content tree from JSZip object.
-    */
-    this.zip = function (zip) {
-        throw new Error('Not implemented'); //TODO
-    };
+  /*
+  Builds content tree from JSZip object.
+  */
+  this.zip = function (zip) {
+    throw new Error('Not implemented'); // TODO
+  };
 
-    /*
-    Builds content tree from an array of files. Use with <input type='file' multiple>
-    */
-    this.fileArray = function (fileArray) {
-        throw new Error('Not implemented'); //TODO
-    };
+  /*
+  Builds content tree from an array of files. Use with <input type='file' multiple>
+  */
+  this.fileArray = function (fileArray) {
+    throw new Error('Not implemented'); // TODO
+  };
 
-    /*
-    Builds content tree from a webkitdirectory. Use with <input type='file' webkitdirectory>
-    */
-    this.webkitDirectory = function (fileArray) {
-        throw new Error('Not implemented'); //TODO
-    };
+  /*
+  Builds content tree from a webkitdirectory. Use with <input type='file' webkitdirectory>
+  */
+  this.webkitDirectory = function (fileArray) {
+    throw new Error('Not implemented'); // TODO
+  };
 
-    /*
-    Builds from a drop event. Currently only supports webkitdirectory.
-    */
-    this.dropEvent = function (event) {
-        let items = event.dataTransfer.items;
+  /*
+  Builds from a drop event. Currently only supports webkitdirectory.
+  */
+  this.dropEvent = function (event) {
+    let items = event.dataTransfer.items;
 
-        traversalComplete = false;
-        for (var i = 0; i < items.length; i++) {
-            if (items[i].webkitGetAsEntry) {
-                traverseWebkitEntry(items[i].webkitGetAsEntry(), [], function () {
-                    contentTree = contentTree.nodes[0].nodes;
-                    _emit('digest', {});
-                });
-            } else {
-                // TODO multiple and single files
-            }
-        }
-        traversalComplete = true;
-    };
+    traversalComplete = false;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].webkitGetAsEntry) {
+        traverseWebkitEntry(items[i].webkitGetAsEntry(), [], function () {
+          contentTree = contentTree.nodes[0].nodes;
+          _emit('digest', {});
+        });
+      } else {
+        // TODO multiple and single files
+      }
+    }
+    traversalComplete = true;
+  };
 }
 
 module.exports = IO;
@@ -545,152 +535,152 @@ Serves static resources over WebRTC.
 const globalConfig = require('../config/config.json');
 
 function StaticServer(views, hasVirtualBackend) {
-    'use strict';
+  'use strict';
 
-    const myPeerID = parseInt(Math.random() * 1e15, 10).toString(16),
-          // A random PeerJS ID
-    maxReconnectAttempts = globalConfig.maxReconnectAttempts; // Max attempts to connect to signalling server    
+  const myPeerID = parseInt(Math.random() * 1e15, 10).toString(16),
+        // A random PeerJS ID
+  maxReconnectAttempts = globalConfig.maxReconnectAttempts; // Max attempts to connect to signalling server
 
-    let peer,
-        //The PeerJS peer object
-    heartbeater,
-        _handlers = {};
+  let peer,
+      // The PeerJS peer object
+  heartbeater,
+      _handlers = {};
 
-    const _emit = function _emit(event, data) {
-        var fn = _handlers[event];
-        if (fn && typeof fn === 'function') {
-            fn(data);
-        }
-    };
+  const _emit = function _emit(event, data) {
+    var fn = _handlers[event];
+    if (fn && typeof fn === 'function') {
+      fn(data);
+    }
+  };
 
-    /*
-        Listen for an event.
-    */
-    this.on = function on(event, handler) {
-        _handlers[event] = handler;
-    };
+  /*
+      Listen for an event.
+  */
+  this.on = function on(event, handler) {
+    _handlers[event] = handler;
+  };
 
-    // Fixes PeerJS' habit of disconnecting us from the signalling server
-    const makePeerHeartbeater = function makePeerHeartbeater(peer) {
-        let timeoutID = 0;
+  // Fixes PeerJS' habit of disconnecting us from the signalling server
+  const makePeerHeartbeater = function makePeerHeartbeater(peer) {
+    let timeoutID = 0;
 
-        function heartbeat() {
-            timeoutID = setTimeout(heartbeat, 20000);
-            if (peer.socket._wsOpen()) {
-                peer.socket.send({
-                    type: 'HEARTBEAT'
-                });
-            }
-        }
-        heartbeat();
-
-        return {
-            start: function () {
-                if (timeoutID === 0) {
-                    heartbeat();
-                }
-            },
-            stop: function () {
-                clearTimeout(timeoutID);
-                timeoutID = 0;
-            }
-        };
-    },
-
-
-    // Returns the view for the provided path
-    getView = function (path) {
-        for (let i = 0; i < views.length; i++) {
-            if (views[i].path === path) {
-                return views[i];
-            }
-        }
-    };
-
-    this.clientURL = globalConfig.paths.client + myPeerID; //The URL where clients can connect
-    this.views = views; //An array of compiled views
-
-    /*
-        Connects to signalling server and starts serving views.
-    */
-    this.launch = function launch() {
-        this.config = this.config || globalConfig.peerJS;
-
-        peer = new Peer(myPeerID, this.config); //Create the peer    
-
-        peer.on('open', function (id) {
-            _emit('ready');
+    function heartbeat() {
+      timeoutID = setTimeout(heartbeat, 20000);
+      if (peer.socket._wsOpen()) {
+        peer.socket.send({
+          type: 'HEARTBEAT'
         });
+      }
+    }
+    heartbeat();
 
-        peer.on('error', err => {
-            //TODO: Route PeerJS errors
-        });
-        heartbeater = makePeerHeartbeater(peer);
+    return {
+      start: function () {
+        if (timeoutID === 0) {
+          heartbeat();
+        }
+      },
+      stop: function () {
+        clearTimeout(timeoutID);
+        timeoutID = 0;
+      }
+    };
+  },
 
-        // Handle incoming connections
-        peer.on('connection', conn => {
-            //TODO: Eventing
 
-            conn.on('close', () => {
-                //TODO: Eventing
+  // Returns the view for the provided path
+  getView = function (path) {
+    for (let i = 0; i < views.length; i++) {
+      if (views[i].path === path) {
+        return views[i];
+      }
+    }
+  };
+
+  this.clientURL = globalConfig.paths.client + myPeerID; // The URL where clients can connect
+  this.views = views; // An array of compiled views
+
+  /*
+      Connects to signalling server and starts serving views.
+  */
+  this.launch = function launch() {
+    this.config = this.config || globalConfig.peerJS;
+
+    peer = new Peer(myPeerID, this.config); // Create the peer
+
+    peer.on('open', function (id) {
+      _emit('ready');
+    });
+
+    peer.on('error', err => {
+      // TODO: Route PeerJS errors
+    });
+    heartbeater = makePeerHeartbeater(peer);
+
+    // Handle incoming connections
+    peer.on('connection', conn => {
+      // TODO: Eventing
+
+      conn.on('close', () => {
+        // TODO: Eventing
+      });
+
+      // Any data received by the server is intended for the virtual backend
+      conn.on('data', data => {
+        // TODO: Eventing
+
+        // Send server a request event
+        if (data.type === 'request') {
+          let event = new CustomEvent('hyperdata', {
+            detail: {
+              request: JSON.parse(data.request),
+              connection: conn,
+              id: data.id
+            }
+          });
+          dispatchEvent(event);
+        }
+
+        // Intercept post-load view requests
+        else if (data.type === 'view') {
+            let view = getView(data.path);
+            view.body = view.content;
+            conn.send({
+              type: 'view',
+              path: data.path,
+              content: {
+                view: view,
+                hasVirtualBackend: hasVirtualBackend
+              }
             });
+          }
+      });
+    });
 
-            // Any data received by the server is intended for the virtual backend
-            conn.on('data', data => {
-                //TODO: Eventing
+    // Handle disconnections from signalling server
+    let failures = 0;
+    peer.on('disconnected', () => {
+      // TODO: Eventing
+      peer.reconnect(); // Auto-reconnect
 
-                // Send server a request event
-                if (data.type === 'request') {
-                    let event = new CustomEvent('hyperdata', {
-                        detail: {
-                            request: JSON.parse(data.request),
-                            connection: conn,
-                            id: data.id
-                        }
-                    });
-                    dispatchEvent(event);
-                }
+      let check = setInterval(() => {
+        // Check the reconnection worked
+        if (!peer.disconnected) {
+          // TODO: Eventing
+          failures = 0;
+          clearInterval(check);
+        } else {
+          failures++;
+          if (failures >= maxReconnectAttempts) {
+            // TODO: Eventing
+            throw new Error('Could not reconnect to signalling server.');
+          }
+        }
+      }, 1000);
+    });
 
-                // Intercept post-load view requests
-                else if (data.type === 'view') {
-                        let view = getView(data.path);
-                        view.body = view.content;
-                        conn.send({
-                            type: 'view',
-                            path: data.path,
-                            content: {
-                                view: view,
-                                hasVirtualBackend: hasVirtualBackend
-                            }
-                        });
-                    }
-            });
-        });
-
-        // Handle disconnections from signalling server
-        let failures = 0;
-        peer.on('disconnected', () => {
-            //TODO: Eventing
-            peer.reconnect(); //Auto-reconnect
-
-            let check = setInterval(() => {
-                //Check the reconnection worked
-                if (!peer.disconnected) {
-                    //TODO: Eventing
-                    failures = 0;
-                    clearInterval(check);
-                } else {
-                    failures++;
-                    if (failures >= maxReconnectAttempts) {
-                        //TODO: Eventing
-                        throw new Error('Could not reconnect to signalling server.');
-                    }
-                }
-            }, 1000);
-        });
-
-        return this.clientURL;
-    };
+    return this.clientURL;
+  };
 }
 
 module.exports = StaticServer;
@@ -707,67 +697,67 @@ It is similar to Express.js, but with HH connections instead of HTTP.
 
 */
 
-//Constructor for the response object, which abstracts away PeerJS
+// Constructor for the response object, which abstracts away PeerJS
 var Response = function (conn, id) {
-    this.body;
-    this.send = function (data) {
-        this.body = data;
-        this.end();
-    };
-    this.end = function () {
-        conn.send({
-            type: "response",
-            id: id,
-            content: {
-                statuscode: this.statuscode,
-                body: this.body
-            }
-        });
-    };
-    this.statuscode = 200;
-    this.kill = function () {
-        conn.close();
-    };
+  this.body;
+  this.send = function (data) {
+    this.body = data;
+    this.end();
+  };
+  this.end = function () {
+    conn.send({
+      type: 'response',
+      id: id,
+      content: {
+        statuscode: this.statuscode,
+        body: this.body
+      }
+    });
+  };
+  this.statuscode = 200;
+  this.kill = function () {
+    conn.close();
+  };
 };
 
-//Creates the server app
+// Creates the server app
 module.exports.createApp = function () {
-    var listening = false,
+  var listening = false,
 
 
-    //Constructs a new router function with the specified methods allowed
-    RouterFunction = function (methods) {
-        var routerFunction = function (route, requestListener, next) {
-            addEventListener('hyperdata', function (e) {
-                if (!listening) return; //Ignore requests made before server is started
-                if (route !== e.detail.request.route) return; //Ignore invalid routes TODO: error here
-                if (routerFunction.methods.indexOf(e.detail.request.method.toLowerCase()) === -1) {
-                    //Block invalid method
-                    console.error("Client requested unsupported route '" + e.detail.request.method + "' on route '" + route + "'");
-                    return;
-                }
-                console.log(e.detail.id + " : " + e.detail.request.method.toUpperCase() + " " + route);
-                requestListener(e.detail.request, new Response(e.detail.connection, e.detail.id), next);
-            }, false);
-        };
-        routerFunction.methods = methods;
-        return routerFunction;
+  // Constructs a new router function with the specified methods allowed
+  RouterFunction = function (methods) {
+    var routerFunction = function (route, requestListener, next) {
+      addEventListener('hyperdata', function (e) {
+        if (!listening) return; // Ignore requests made before server is started
+        if (route !== e.detail.request.route) return; // Ignore invalid routes TODO: error here
+        if (routerFunction.methods.indexOf(e.detail.request.method.toLowerCase()) === -1) {
+          // Block invalid method
+          console.error("Client requested unsupported route '" + e.detail.request.method + "' on route '" + route + "'");
+          return;
+        }
+        console.log(e.detail.id + ' : ' + e.detail.request.method.toUpperCase() + ' ' + route);
+        requestListener(e.detail.request, new Response(e.detail.connection, e.detail.id), next);
+      }, false);
     };
+    routerFunction.methods = methods;
+    return routerFunction;
+  };
 
-    //Router functions for different methods
-    app = {
-        all: new RouterFunction(['get', 'post']),
-        get: new RouterFunction(['get']),
-        post: new RouterFunction(['post'])
-    };
+  // Router functions for different methods
+  app = {
+    all: new RouterFunction(['get', 'post']),
+    get: new RouterFunction(['get']),
+    post: new RouterFunction(['post'])
+  };
 
-    //Allows requests to be served
-    app.listen = function () {
-        listening = true;
-        console.log("Virtual server listenting...");
-    };
+  // Allows requests to be served
+  app.listen = function () {
+    listening = true;
+    console.log('Virtual server listenting...');
+  };
 
-    return app;
+  return app;
 };
 
 },{}],8:[function(require,module,exports){
@@ -784,62 +774,59 @@ const config = require('../config/config.json'),
       hyperhostRequireModule = require('./virtualModules/HH-hyperhost.js');
 
 function VirtualServer(startScript, modules, jsonFiles) {
-    'use strict';
+  'use strict';
 
-    let moduleListing = [];
+  let moduleListing = [];
 
-    // The 'require' emulator
-    const HHrequire = function HHrequire(moduleName) {
-        if (moduleListing.indexOf(moduleName) === -1) {
-            return;
-        } else {
-            return modules[moduleName];
-        }
-    },
+  // The 'require' emulator
+  const HHrequire = function HHrequire(moduleName) {
+    if (moduleListing.indexOf(moduleName) === -1) {
+      return;
+    } else {
+      return modules[moduleName];
+    }
+  };
 
+  // Gets a Wzrd.in url from module name
+  const getWzrdModuleUrl = function getWzrdModuleUrl(name, version) {
+    return config.paths.wzrd + name + jsonFiles['package']['dependencies'][name] + (version ? '@' + version : '');
+  };
 
-    //Gets a Wzrd.in url from module name
-    getWzrdModuleUrl = function getWzrdModuleUrl(name, version) {
-        return config.paths.wzrd + name + jsonFiles['package']['dependencies'][name] + (!!version ? '@' + version : '');
-    };
+  /*
+      Launch the virtual server.
+  */
+  this.launch = function launch() {
+    let npmModuleList = Object.keys(jsonFiles['package']['dependencies']); // Get NPM modules from package.json
+    moduleListing = Object.keys(modules);
+    moduleListing = moduleListing.concat(npmModuleList);
 
-    /*
-        Launch the virtual server.
-    */
-    this.launch = function launch() {
-        let npmModuleList = Object.keys(jsonFiles['package']['dependencies']); //Get NPM modules from package.json
-        moduleListing = Object.keys(modules);
-        moduleListing = moduleListing.concat(npmModuleList);
+    // Generate urls for wzrd.in files
+    for (let i = 0; i < npmModuleList.length; i++) {
+      modules[npmModuleList[i]] = getWzrdModuleUrl(npmModuleList[i], jsonFiles['package']['dependencies'][npmModuleList[i]]);
+    }
 
-        //Generate urls for wzrd.in files
-        for (let i = 0; i < npmModuleList.length; i++) {
-            modules[npmModuleList[i]] = getWzrdModuleUrl(npmModuleList[i], jsonFiles['package']['dependencies'][npmModuleList[i]]);
-        }
+    window.HyperHost.modules = modules; // Expose the modules
 
-        window.HyperHost.modules = modules; //Expose the modules
+    // Inject the virtual backend modules
+    util.injectScripts(moduleListing, modules, function () {
+      // Wzrd will put everything on the window, so we need to move it to the modules
+      for (let i = 0; i < npmModuleList.length; i++) {
+        modules[npmModuleList[i]] = window[util.camelize(npmModuleList[i])];
+      }
 
+      // Add the HyperHost virtual module
+      moduleListing.push('hyperhost');
+      modules['hyperhost'] = hyperhostRequireModule;
 
-        //Inject the virtual backend modules
-        util.injectScripts(moduleListing, modules, function () {
+      window.require = HHrequire; // Overwrite any other 'require' methods
 
-            //Wzrd will put everything on the window, so we need to move it to the modules
-            for (let i = 0; i < npmModuleList.length; i++) {
-                modules[npmModuleList[i]] = window[util.camelize(npmModuleList[i])];
-            }
-
-            // Add the HyperHost virtual module
-            moduleListing.push('hyperhost');
-            modules['hyperhost'] = hyperhostRequireModule;
-
-            window.require = HHrequire; //Overwrite any other 'require' methods
-
-            //Inject the virtual start script after modules loaded
-            const script = document.createElement('script');
-            script.setAttribute('type', 'text/javascript');
-            script.setAttribute('src', startScript);
-            document.head.appendChild(script);
-        });
-    };
+      // Inject the virtual start script after modules loaded
+      const script = document.createElement('script');
+      script.setAttribute('type', 'text/javascript');
+      script.setAttribute('src', startScript);
+      document.head.appendChild(script);
+    });
+  };
 }
 
 module.exports = VirtualServer;
@@ -856,233 +843,232 @@ Utilities.
 
 */
 
-var mimeTypes = require("./mimeTypes.json");
+var mimeTypes = require('./mimeTypes.json');
 
 var base64 = {
-    _keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+  _keyStr: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
 
-    encode: function (input) {
-        var output = "",
-            chr1,
-            chr2,
-            chr3,
-            enc1,
-            enc2,
-            enc3,
-            enc4,
-            i = 0;
+  encode: function (input) {
+    var output = '',
+        chr1,
+        chr2,
+        chr3,
+        enc1,
+        enc2,
+        enc3,
+        enc4,
+        i = 0;
 
-        input = base64._utf8_encode(input);
+    input = base64._utf8_encode(input);
 
-        while (i < input.length) {
+    while (i < input.length) {
+      chr1 = input.charCodeAt(i++);
+      chr2 = input.charCodeAt(i++);
+      chr3 = input.charCodeAt(i++);
 
-            chr1 = input.charCodeAt(i++);
-            chr2 = input.charCodeAt(i++);
-            chr3 = input.charCodeAt(i++);
+      enc1 = chr1 >> 2;
+      enc2 = (chr1 & 3) << 4 | chr2 >> 4;
+      enc3 = (chr2 & 15) << 2 | chr3 >> 6;
+      enc4 = chr3 & 63;
 
-            enc1 = chr1 >> 2;
-            enc2 = (chr1 & 3) << 4 | chr2 >> 4;
-            enc3 = (chr2 & 15) << 2 | chr3 >> 6;
-            enc4 = chr3 & 63;
+      if (isNaN(chr2)) {
+        enc3 = enc4 = 64;
+      } else if (isNaN(chr3)) {
+        enc4 = 64;
+      }
 
-            if (isNaN(chr2)) {
-                enc3 = enc4 = 64;
-            } else if (isNaN(chr3)) {
-                enc4 = 64;
-            }
-
-            output = output + this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) + this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
-        }
-        return output;
-    },
-
-    // private method for UTF-8 encoding
-    _utf8_encode: function (string) {
-        string = string.replace(/\r\n/g, "\n");
-
-        var utftext = "";
-
-        for (var n = 0; n < string.length; n++) {
-            var c = string.charCodeAt(n);
-            if (c < 128) {
-                utftext += String.fromCharCode(c);
-            } else if (c > 127 && c < 2048) {
-                utftext += String.fromCharCode(c >> 6 | 192) + String.fromCharCode(c & 63 | 128);
-            } else {
-                utftext += String.fromCharCode(c >> 12 | 224);
-                +String.fromCharCode(c >> 6 & 63 | 128);
-                +String.fromCharCode(c & 63 | 128);
-            }
-        }
-        return utftext;
+      output = output + this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) + this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
     }
+    return output;
+  },
+
+  // private method for UTF-8 encoding
+  _utf8_encode: function (string) {
+    string = string.replace(/\r\n/g, '\n');
+
+    var utftext = '';
+
+    for (var n = 0; n < string.length; n++) {
+      var c = string.charCodeAt(n);
+      if (c < 128) {
+        utftext += String.fromCharCode(c);
+      } else if (c > 127 && c < 2048) {
+        utftext += String.fromCharCode(c >> 6 | 192) + String.fromCharCode(c & 63 | 128);
+      } else {
+        utftext += String.fromCharCode(c >> 12 | 224);
+        +String.fromCharCode(c >> 6 & 63 | 128);
+        +String.fromCharCode(c & 63 | 128);
+      }
+    }
+    return utftext;
+  }
 };
 
 // Escapes a regex expression
 module.exports.escapeRegex = function (str) {
-    return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
 };
 
 // Creates a dataURI from some data
 module.exports.toDataURI = function (content, extension) {
-    var prefix = "data:" + mimeTypes[extension] + ";base64,";
+  var prefix = 'data:' + mimeTypes[extension] + ';base64,';
 
-    if (content.slice(0, 5) === "data:") {
-        return content; //Likely alredy encoded
-    }
-    if (content.indexOf(prefix) !== -1) {
-        return content; //Likely to be already encoded
-    }
+  if (content.slice(0, 5) === 'data:') {
+    return content; // Likely alredy encoded
+  }
+  if (content.indexOf(prefix) !== -1) {
+    return content; // Likely to be already encoded
+  }
+  try {
+    return prefix + base64.encode(content);
+  } catch (err) {
+    console.warn(err);
     try {
-        return prefix + base64.encode(content);
+      return prefix + base64.encode(unescape(encodeURIComponent(content)));
     } catch (err) {
-        console.warn(err);
-        try {
-            return prefix + base64.encode(unescape(encodeURIComponent(content)));
-        } catch (err) {
-            console.warn(err);
-            return "";
-        }
+      console.warn(err);
+      return '';
     }
+  }
 };
 
 // Gets the extension of a file name
 module.exports.nameToExtension = function (name) {
-    var ext = name.split(".");
-    ext = ext[ext.length - 1].toLowerCase();
-    return ext;
+  var ext = name.split('.');
+  ext = ext[ext.length - 1].toLowerCase();
+  return ext;
 };
 
 // Check if array contains an item
 module.exports.contains = function (array, item) {
-    return array.indexOf(item) !== -1;
+  return array.indexOf(item) !== -1;
 };
 
 // Deeply sets a nested object/array tree, creating ancestors where they are missing
 // Ancestors is an array of names that lead from root to the target object
 module.exports.deepSetTree = function (tempObj, value, ancestors) {
-    for (var i = 0; i < ancestors.length; i++) {
-        var found = false;
-        for (var i2 = 0; i2 < tempObj.nodes.length; i2++) {
-            //Locate the ancestors
-            if (tempObj.nodes[i2].name === ancestors[i]) {
-                tempObj = tempObj.nodes[i2];
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            tempObj.nodes.push({ //Create the ancestor if it doesn't exits
-                name: ancestors[i],
-                nodes: []
-            });
-            for (var i2 = 0; i2 < tempObj.nodes.length; i2++) {
-                //Get the reference of the new object
-                if (tempObj.nodes[i2].name === ancestors[i]) {
-                    tempObj = tempObj.nodes[i2];
-                    break;
-                }
-            }
-        }
+  for (var i = 0; i < ancestors.length; i++) {
+    var found = false;
+    for (var i2 = 0; i2 < tempObj.nodes.length; i2++) {
+      // Locate the ancestors
+      if (tempObj.nodes[i2].name === ancestors[i]) {
+        tempObj = tempObj.nodes[i2];
+        found = true;
+        break;
+      }
     }
-    tempObj.nodes.push(value);
+    if (!found) {
+      tempObj.nodes.push({ // Create the ancestor if it doesn't exits
+        name: ancestors[i],
+        nodes: []
+      });
+      for (var i2 = 0; i2 < tempObj.nodes.length; i2++) {
+        // Get the reference of the new object
+        if (tempObj.nodes[i2].name === ancestors[i]) {
+          tempObj = tempObj.nodes[i2];
+          break;
+        }
+      }
+    }
+  }
+  tempObj.nodes.push(value);
 };
 
 // Injects an array of urls as scripts into the document
 module.exports.injectScripts = function (scripts, mappingObject, callback) {
-    var remaining = scripts.length;
+  var remaining = scripts.length;
 
-    function loadScript(i) {
-        if (!scripts[i]) {
+  function loadScript(i) {
+    if (!scripts[i]) {
+      callback();
+      return;
+    }
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+
+    if (script.readyState) {
+      // IE
+      script.onreadystatechange = function () {
+        if (script.readyState === 'loaded' || script.readyState === 'complete') {
+          script.onreadystatechange = null;
+          remaining--;
+          if (remaining === 0) {
             callback();
-            return;
+          } else {
+            if (i < scripts.length - 1) {
+              loadScript(i + 1);
+            }
+          }
         }
-        var script = document.createElement("script");
-        script.type = "text/javascript";
-
-        if (script.readyState) {
-            //IE
-            script.onreadystatechange = function () {
-                if (script.readyState === "loaded" || script.readyState === "complete") {
-                    script.onreadystatechange = null;
-                    remaining--;
-                    if (remaining === 0) {
-                        callback();
-                    } else {
-                        if (i < scripts.length - 1) {
-                            loadScript(i + 1);
-                        }
-                    }
-                }
-            };
+      };
+    } else {
+      // Others
+      script.onload = function () {
+        remaining--;
+        if (remaining === 0) {
+          callback();
         } else {
-            //Others
-            script.onload = function () {
-                remaining--;
-                if (remaining === 0) {
-                    callback();
-                } else {
-                    loadScript(i + 1);
-                }
-            };
+          loadScript(i + 1);
         }
-
-        script.src = mappingObject[scripts[i]];
-        document.getElementsByTagName("head")[0].appendChild(script);
+      };
     }
-    loadScript(0);
+
+    script.src = mappingObject[scripts[i]];
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+  loadScript(0);
 };
 
-//Basic ajax call
+// Basic ajax call
 module.exports.ajax = function (method, url, xOriginProxy, successCallback, errorCallback) {
-    var xhr = new XMLHttpRequest();
-    url = xOriginProxy + url;
-    xhr.open(method, url, true);
-    xhr.onreadystatechange = function (e) {
-        if (this.readyState === 4) {
-            if (this.status >= 200 && this.status < 400) {
-                if (successCallback && successCallback.constructor == Function) {
-                    return successCallback(this.responseText);
-                }
-            } else {
-                if (errorCallback && errorCallback.constructor == Function) {
-                    return errorCallback(this.statusText);
-                } else {
-                    console.error("Failed to get resource '" + url + "' Error: " + this.statusText);
-                }
-            }
+  var xhr = new XMLHttpRequest();
+  url = xOriginProxy + url;
+  xhr.open(method, url, true);
+  xhr.onreadystatechange = function (e) {
+    if (this.readyState === 4) {
+      if (this.status >= 200 && this.status < 400) {
+        if (successCallback && successCallback.constructor == Function) {
+          return successCallback(this.responseText);
         }
-    };
-    xhr.onerror = function (e) {
+      } else {
         if (errorCallback && errorCallback.constructor == Function) {
-            return errorCallback(this.statusText);
+          return errorCallback(this.statusText);
         } else {
-            console.error("Failed to get resource. Error: " + this.statusText);
+          console.error("Failed to get resource '" + url + "' Error: " + this.statusText);
         }
-    };
-    xhr.send(null);
+      }
+    }
+  };
+  xhr.onerror = function (e) {
+    if (errorCallback && errorCallback.constructor == Function) {
+      return errorCallback(this.statusText);
+    } else {
+      console.error('Failed to get resource. Error: ' + this.statusText);
+    }
+  };
+  xhr.send(null);
 };
 
-//Ajax-es an array of urls, only returning when all have been loaded
+// Ajax-es an array of urls, only returning when all have been loaded
 module.exports.ajaxMulti = function (arr, successCallback, errorCallback) {
-    var result = [];
-    var remaining = arr.length;
-    for (var i = 0; i < arr.length; i++) {
-        ajax(arr[i], function (data) {
-            result[i] = data;
-            remaining--;
-            if (remaining === 0) {
-                successCallback(result);
-            }
-        }, errorCallback);
-    }
+  var result = [];
+  var remaining = arr.length;
+  for (var i = 0; i < arr.length; i++) {
+    ajax(arr[i], function (data) {
+      result[i] = data;
+      remaining--;
+      if (remaining === 0) {
+        successCallback(result);
+      }
+    }, errorCallback);
+  }
 };
 
 // dash-case to camelCase
 module.exports.camelize = function (str) {
-    return str.replace(/-([a-z])/g, function (g) {
-        return g[1].toUpperCase();
-    });
+  return str.replace(/-([a-z])/g, function (g) {
+    return g[1].toUpperCase();
+  });
 };
 
 },{"./mimeTypes.json":9}]},{},[2])(2)

@@ -10,13 +10,6 @@
     <script src="../dist/host/hyperhost.js"></script>
     <script>   
 
-        document.addEventListener('dragover', function(event){
-                        event.stopPropagation();
-            event.preventDefault();
-        });
-        document.addEventListener('drop', function(event){
-            event.stopPropagation();
-            event.preventDefault();
         
             // Creates a new HH instance and connects to the signalling server.
             var host = new HyperHost();
@@ -32,8 +25,12 @@
             });
 
             // Digest the files to be served.
-            host.io.dropEvent(event);
+            host.io.contentTree([
+                {
+                  name: 'index.html',
+                  content: 'hello'
+                }
+              ]);
 
-        });
     </script>
 </html>
