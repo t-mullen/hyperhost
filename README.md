@@ -82,9 +82,9 @@ First, the files you upload are read and seperated into static assets (images, H
 
 The static assets are base64 encoded and bundled into a single large file (with some extra scripts for changing page). The server code is injected into the host page, along with any external NPM modules. The server is now running.  
 
-When a client connects, they first connect to a signalling server, which helps with the creation of a WebRTC connection to the host page. When a connection is established, the static resource bundle is sent over it and the client displays it.  
+When a client connects, they first connect to a signalling server, which helps with the creation of a WebRTC connection to the host page. When a connection is established, the static resource bundle is sent and displayed by the client.    
 
-The same connection is used to handle any subsequent requests to the host (by way of the HyperRequest object). These requests are forwarded to the server code that was already injected, and the response comes back the same way.  
+The same connection is used to handle any subsequent requests to the host (by way of the HyperRequest object). These requests are forwarded to the server code, which sends a response back the same way.  
 
 ### Custom Usage
 
