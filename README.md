@@ -9,6 +9,8 @@
 <h4 align="center">Peer-To-Peer Node Servers in the Browser.</h4>
 <br>
 
+*Currently just a prototype. A production version is in development.*
+
 ### Demo
 Drag and drop your website (with at least an **index.html**) into https://rationalcoding.github.io/hyperhost/.  
 It will be instantly served ***from your browser*** via WebRTC.
