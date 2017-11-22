@@ -133,5 +133,3 @@ host.io.contentTree([
 
 **Notes:**  
 You can host the files in this repo anywhere (even on a file:// domain!) if you don't want to use Github's servers for the initial resources. You can also use any PeerJS signalling server (with the addition of a `/api/peers` route that returns all peer IDs)
-
-### [MULTIHACK](https://rationalcoding.github.io/multihack-web) is a web-based editor that uses HyperHost to deploy your project even faster!
