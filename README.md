@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://rationalcoding.github.io/hyperhost/"><img src="https://s12.postimg.org/6asslh8hp/HH_logo.png" alt="HyperHost" width="200"></a>
+  <a href="https://t-mullen.github.io/hyperhost/"><img src="https://s12.postimg.org/6asslh8hp/HH_logo.png" alt="HyperHost" width="200"></a>
   <br>
   HyperHost
   <br>
@@ -12,7 +12,7 @@
 *Currently just a prototype. A production version is in development.*
 
 ### Demo
-Drag and drop your website (with at least an **index.html**) into https://rationalcoding.github.io/hyperhost/.  
+Drag and drop your website (with at least an **index.html**) into https://t-mullen.github.io/hyperhost/.  
 It will be instantly served ***from your browser*** via WebRTC.
 
 ### Node Servers
